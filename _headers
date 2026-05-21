@@ -1,0 +1,4 @@
+/video/*
+  Cache-Control: public, max-age=86400
+/assets/*
+  Cache-Control: public, max-age=86400

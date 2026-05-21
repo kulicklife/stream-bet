@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1xBET · Stream Bet · DEMO v0.2.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/*
+  Внешняя обёртка — имитация UI оператора 1xBET.
+  Цвета и компоновка взяты с продакшн-скриншота — задник для встраивания
+  игры через iframe (src="demo-v0.2.html").
+  Стили никак не пересекаются с игрой — игра живёт внутри iframe
+  в собственном document-контексте.
+*/
+:root {
+  --xbet-blue-deep:   #0F2238;
+  --xbet-blue-bg:     #1A3252;
+  --xbet-blue-row:    #234A75;
+  --xbet-blue-light:  #3D6B9E;
+  --xbet-live:        #1986D1;
+  --xbet-live-bright: #1FA0F2;
+  --xbet-text:        #FFFFFF;
+  --xbet-text-dim:    #8FB2D4;
+  --xbet-text-mute:   #5A7FA8;
+  --xbet-sidebar-bg:  #18324E;
+  --xbet-divider:     rgba(255,255,255,0.05);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--xbet-blue-bg);
+  color: var(--xbet-text);
+  font-family: 'Roboto', system-ui, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ─── ШАПКА (логотип) ─── */
+#xbet-header {
+  height: 56px;
+  background: var(--xbet-blue-bg);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  position: relative;
+  z-index: 5;
+}
+.xbet-logo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.xbet-logo img {
+  display: block;
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ─── НАВИГАЦИЯ ─── */
+#xbet-nav {
+  height: 48px;
+  background: var(--xbet-blue-row);
+  display: flex;
+  align-items: stretch;
+  padding-left: 28px;
+  border-bottom: 1px solid var(--xbet-divider);
+  position: relative;
+  z-index: 4;
+}
+.xbet-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
+  color: var(--xbet-text);
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  position: relative;
+  text-transform: uppercase;
+}
+.xbet-nav-item:hover { background: rgba(255,255,255,0.04); }
+.xbet-nav-item.active {
+  background: var(--xbet-live);
+  border-radius: 4px;
+  margin: 8px 6px;
+  padding: 0 16px;
+  height: 32px;
+  font-weight: 700;
+}
+.xbet-nav-item .caret {
+  font-size: 8px;
+  opacity: 0.7;
+}
+.xbet-nav-item .trophy {
+  font-size: 16px;
+  margin-right: 4px;
+  color: var(--xbet-text-dim);
+}
+
+/* ─── КОНТЕНТНАЯ ОБЛАСТЬ ─── */
+#xbet-body {
+  display: flex;
+  height: calc(100% - 56px - 48px);
+  background: var(--xbet-blue-bg);
+}
+
+/* ─── ЛЕВЫЙ САЙДБАР (виды спорта) ─── */
+#xbet-sidebar {
+  width: 46px;
+  background: var(--xbet-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 4px;
+  border-right: 1px solid var(--xbet-divider);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.xbet-sport-icon {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--xbet-text-mute);
+  font-size: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.xbet-sport-icon:hover { background: rgba(255,255,255,0.06); color: var(--xbet-text-dim); }
+.xbet-sport-icon svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* ─── ОСНОВНАЯ ОБЛАСТЬ ─── */
+#xbet-main {
+  flex: 1;
+  overflow: auto;
+  padding: 14px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Банер "STREAM BET" */
+#xbet-stream-banner {
+  width: 100%;
+  max-width: 1280px;
+  height: 56px;
+  background: linear-gradient(180deg, var(--xbet-live-bright) 0%, var(--xbet-live) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px 4px 0 0;
+  color: var(--xbet-text);
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+/* Контейнер игры */
+#xbet-game-wrap {
+  width: 1280px;
+  height: 720px;
+  flex-shrink: 0;
+  background: #000;
+  position: relative;
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+#xbet-game-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ─── СКРОЛЛБАР ─── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--xbet-blue-deep); }
+::-webkit-scrollbar-thumb { background: var(--xbet-blue-light); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--xbet-live); }
+</style>
+</head>
+<body>
+
+<!-- ШАПКА -->
+<header id="xbet-header">
+  <div class="xbet-logo">
+    <img src="assets/1xbet-logo.svg" alt="1xBET" />
+  </div>
+</header>
+
+<!-- НАВИГАЦИЯ -->
+<nav id="xbet-nav">
+  <div class="xbet-nav-item"><span class="trophy">🏆</span>TOP-EVENTS <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">SPORTS <span class="caret">▾</span></div>
+  <div class="xbet-nav-item active">LIVE <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">1XGAMES <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">CASINO <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">LIVE CASINO <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">ESPORTS <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">PROMO <span class="caret">▾</span></div>
+  <div class="xbet-nav-item">MORE <span class="caret">▾</span></div>
+</nav>
+
+<!-- ТЕЛО -->
+<div id="xbet-body">
+
+  <!-- САЙДБАР ВИДОВ СПОРТА -->
+  <aside id="xbet-sidebar">
+    <div class="xbet-sport-icon" title="Американский футбол">🏈</div>
+    <div class="xbet-sport-icon" title="Регби">🏉</div>
+    <div class="xbet-sport-icon" title="CS"><svg viewBox="0 0 24 24"><path d="M5 7h2v2h2v2H7v2H5V7zm10 0h2v6h-2V7zm-5 4h2v2h-2v-2z"/></svg></div>
+    <div class="xbet-sport-icon" title="Хоккей">🏒</div>
+    <div class="xbet-sport-icon" title="Гимнастика">🤸</div>
+    <div class="xbet-sport-icon" title="Теннис">🎾</div>
+    <div class="xbet-sport-icon" title="Борьба">🤼</div>
+    <div class="xbet-sport-icon" title="Ралли">🏎️</div>
+    <div class="xbet-sport-icon" title="Авто">🚗</div>
+    <div class="xbet-sport-icon" title="Гольф">⛳</div>
+    <div class="xbet-sport-icon" title="Формула">🏁</div>
+    <div class="xbet-sport-icon" title="Тех. виды">🔧</div>
+    <div class="xbet-sport-icon" title="Зимние виды">⛷️</div>
+    <div class="xbet-sport-icon" title="ММА">🥊</div>
+    <div class="xbet-sport-icon" title="Настолки">🎲</div>
+    <div class="xbet-sport-icon" title="Дартс">🎯</div>
+    <div class="xbet-sport-icon" title="Снукер">🎱</div>
+    <div class="xbet-sport-icon" title="Музыка">🎵</div>
+    <div class="xbet-sport-icon" title="Лыжи">🎿</div>
+    <div class="xbet-sport-icon" title="Глобус">🌐</div>
+    <div class="xbet-sport-icon" title="Стрелы">🏹</div>
+  </aside>
+
+  <!-- ОСНОВНАЯ ОБЛАСТЬ -->
+  <main id="xbet-main">
+    <div id="xbet-stream-banner">STREAM BET</div>
+    <div id="xbet-game-wrap">
+      <iframe id="xbet-game-frame"
+              src="demo-v0.2.html"
+              allow="autoplay; fullscreen"
+              referrerpolicy="no-referrer"></iframe>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
