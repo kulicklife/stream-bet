@@ -1,0 +1,25 @@
+.card {
+  width: 76px;
+  height: 108px;
+  background: var(--color-bg-canvas-warm);
+  border: 1px solid var(--color-text-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-family: var(--font-head);
+  box-shadow: var(--shadow-lift);
+  transition: transform var(--t-base) ease, box-shadow var(--t-base) ease;
+}
+.card.fixed {
+  transform: scale(1.10);
+  box-shadow: var(--shadow-glow), var(--shadow-lift);
+}
+.rank {
+  font-size: var(--fs-700);
+  font-weight: 400;
+  line-height: 1;
+}
+.suit { font-size: var(--fs-500); margin-top: var(--space-2); font-family: var(--font-ui); }
+.card.w1 .rank, .card.w1 .suit { color: var(--color-side-w1-deep); }
+.card.w2 .rank, .card.w2 .suit { color: var(--color-side-w2-deep); }

@@ -1,0 +1,22 @@
+.strip { display: flex; align-items: center; gap: var(--space-2); }
+.label {
+  font-family: var(--font-stencil);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-right: var(--space-4);
+}
+.chip {
+  width: 24px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-size: var(--fs-500);
+  color: var(--color-text-on-dark);
+}
+.chip.w1 { background: var(--color-side-w1); }
+.chip.w2 { background: var(--color-side-w2); }

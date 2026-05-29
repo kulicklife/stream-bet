@@ -1,0 +1,19 @@
+.btn {
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-stencil);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  background: var(--color-text-strong);
+  border: 2px solid var(--color-text-strong);
+  color: var(--color-text-on-dark);
+  text-transform: uppercase;
+  box-shadow: var(--shadow-flat);
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-text-on-light);
+}
+.btn:disabled { opacity: 0.35; cursor: default; }

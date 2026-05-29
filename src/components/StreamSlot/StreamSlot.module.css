@@ -1,0 +1,70 @@
+.slot {
+  position: relative;
+  height: 300px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #000;
+  transition: box-shadow var(--t-slow) ease;
+}
+.slot video {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(100% - 16px);
+  object-fit: cover;
+  z-index: 2;
+}
+.slot.active { box-shadow: var(--shadow-glow); }
+
+/* Канаты сверху и снизу — горизонтальные параллельные линии цвета угла. */
+.slot::before,
+.slot::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  z-index: 4;
+}
+.slot::before { top: 0; }
+.slot::after { bottom: 0; }
+.slot.w1::before,
+.slot.w1::after {
+  background: linear-gradient(
+    to bottom,
+    var(--color-side-w1) 0 2px,
+    transparent 2px 3px,
+    var(--color-bg-canvas) 3px 5px,
+    transparent 5px 6px,
+    var(--color-side-w1) 6px 8px
+  );
+}
+.slot.w2::before,
+.slot.w2::after {
+  background: linear-gradient(
+    to bottom,
+    var(--color-side-w2) 0 2px,
+    transparent 2px 3px,
+    var(--color-bg-canvas) 3px 5px,
+    transparent 5px 6px,
+    var(--color-side-w2) 6px 8px
+  );
+}
+
+.cornerLabel {
+  position: absolute;
+  top: 12px;
+  font-family: var(--font-stencil);
+  font-weight: 700;
+  font-size: var(--fs-300);
+  letter-spacing: var(--tracking-stencil);
+  padding: 3px 10px;
+  z-index: 5;
+  color: var(--color-text-on-dark);
+  text-transform: uppercase;
+}
+.w1 .cornerLabel { left: 10px; background: var(--color-side-w1); transform: rotate(-2deg); }
+.w2 .cornerLabel { right: 10px; background: var(--color-side-w2); transform: rotate(2deg); }

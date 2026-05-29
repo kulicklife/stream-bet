@@ -1,0 +1,17 @@
+.btn {
+  position: fixed;
+  top: 40px;
+  right: 12px;
+  z-index: 100;
+  background: var(--color-bg-app);
+  border: 2px solid var(--color-text-on-dark);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--color-text-on-dark);
+}
+.btn:hover, .btn.open { color: var(--color-accent); border-color: var(--color-accent); }

@@ -1,0 +1,38 @@
+.info {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel {
+  position: relative;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-on-light);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border-left: 2px solid var(--color-text-strong);
+  border-right: 2px solid var(--color-text-strong);
+}
+
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-side-w1) 0 2px,
+    transparent 2px 3px,
+    var(--color-text-strong) 3px 5px,
+    transparent 5px 6px,
+    var(--color-side-w2) 6px 8px
+  );
+}
+.panel::before { top: 0; }
+.panel::after { bottom: 0; }

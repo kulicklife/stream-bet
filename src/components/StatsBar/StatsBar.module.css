@@ -1,0 +1,78 @@
+.bar {
+  height: 80px;
+  background: var(--color-bg-app);
+  display: flex;
+  align-items: stretch;
+  z-index: 10;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(240, 234, 217, 0.1);
+}
+.bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-side-w1) 0 2px,
+    transparent 2px 3px,
+    var(--color-bg-canvas) 3px 5px,
+    transparent 5px 6px,
+    var(--color-side-w2) 6px 8px
+  );
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-7) 0;
+}
+.center {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+}
+.label {
+  font-family: var(--font-stencil);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.record {
+  font-family: var(--font-head);
+  font-size: var(--fs-600);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-on-dark);
+}
+.record.w1 .w { color: var(--color-side-w1); }
+.record.w2 .w { color: var(--color-side-w2); }
+.record .l { color: var(--color-text-muted); }
+.total {
+  font-family: var(--font-ui);
+  font-size: var(--fs-100);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.total span {
+  color: var(--color-trophy);
+  font-family: var(--font-mono);
+  font-size: var(--fs-400);
+  font-weight: 700;
+}

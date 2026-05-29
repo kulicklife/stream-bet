@@ -1,0 +1,88 @@
+/*
+  Дизайн-токены — нейтральная база (semantic-уровень).
+  Все компоненты ссылаются ТОЛЬКО на эти переменные.
+  Конкретные значения переопределяются в src/styles/themes/*.css.
+
+  Принцип: эти имена — про "роль", а не про цвет.
+  Например --color-side-w1, а не --color-blue, потому что в night-classic это сапфир,
+  а в cyberpunk — неоновый cyan. Компонент про значение не знает.
+*/
+:root {
+  /* ── Фоны ─────────────────────────────────────────── */
+  --color-bg-app: #0A0A0B;
+  --color-bg-panel: rgba(10, 10, 11, 0.96);
+  --color-bg-canvas: #F0EAD9;
+  --color-bg-canvas-warm: #E8E1D2;
+  --color-bg-glass: rgba(11, 15, 26, 0.58);
+
+  /* ── Стороны (W1 и W2) ────────────────────────────── */
+  --color-side-w1: #0050C8;
+  --color-side-w1-deep: #003DA5;
+  --color-side-w2: #D7152E;
+  --color-side-w2-deep: #C8102E;
+
+  /* ── Свет / акценты ──────────────────────────────── */
+  --color-accent: #FFC83D;       /* активный/таймер */
+  --color-accent-deep: #FFB81C;
+  --color-accent-glow: rgba(255, 184, 28, 0.32);
+  --color-positive: #007030;
+  --color-negative: #B83A2A;
+  --color-trophy: #E5B448;       /* чемпионское золото для пояса/выплат */
+
+  /* ── Текст ────────────────────────────────────────── */
+  --color-text-strong: #0A0A0B;
+  --color-text-on-dark: #F0EAD9;
+  --color-text-on-light: #0A0A0B;
+  --color-text-muted: #9A9088;
+  --color-text-shadow: #6C6450;
+
+  /* ── Типографика ─────────────────────────────────── */
+  --font-head: 'Anton', 'Bebas Neue', Impact, sans-serif;
+  --font-ui: 'Roboto Condensed', 'Inter', sans-serif;
+  --font-stencil: 'Stardos Stencil', 'Allerta Stencil', monospace;
+  --font-mono: 'Roboto Mono', monospace;
+
+  --fs-100: 10px;
+  --fs-200: 11px;
+  --fs-300: 13px;
+  --fs-400: 14px;
+  --fs-500: 18px;
+  --fs-600: 22px;
+  --fs-700: 30px;
+  --fs-800: 48px;
+  --fs-900: 64px;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0.02em;
+  --tracking-stencil: 0.20em;
+  --tracking-label: 0.18em;
+
+  /* ── Spacing ─────────────────────────────────────── */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 22px;
+  --space-8: 32px;
+  --space-9: 48px;
+
+  /* ── Радиусы / тени ──────────────────────────────── */
+  --radius-0: 0;
+  --radius-1: 2px;
+  --radius-2: 4px;
+  --shadow-flat: 0 3px 0 rgba(0, 0, 0, 0.45);   /* постерная плоская */
+  --shadow-lift: 0 6px 0 rgba(0, 0, 0, 0.6);    /* для карт */
+  --shadow-glow: 0 0 28px var(--color-accent-glow);
+
+  /* ── Layout ──────────────────────────────────────── */
+  --canvas-w: 1280px;
+  --canvas-h: 720px;
+
+  /* ── Анимации ────────────────────────────────────── */
+  --t-fast: 80ms;
+  --t-base: 200ms;
+  --t-slow: 400ms;
+}

@@ -1,0 +1,57 @@
+.arena {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-6) var(--space-7);
+  text-align: center;
+}
+.title {
+  font-family: var(--font-head);
+  font-size: var(--fs-700);
+  color: var(--color-text-on-light);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-normal);
+  margin-bottom: var(--space-3);
+}
+.title::after {
+  content: '';
+  display: block;
+  margin: var(--space-3) auto 0;
+  width: 50%;
+  height: 3px;
+  background: var(--color-text-strong);
+}
+.hint {
+  font-size: var(--fs-200);
+  color: var(--color-text-shadow);
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+}
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-7);
+  margin-top: var(--space-5);
+}
+.slot { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+.label {
+  font-family: var(--font-stencil);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  text-transform: uppercase;
+}
+.slot.w1 .label { color: var(--color-side-w1); }
+.slot.w2 .label { color: var(--color-side-w2); }
+.vs {
+  font-family: var(--font-head);
+  font-size: var(--fs-600);
+  color: var(--color-text-strong);
+  text-transform: uppercase;
+  margin-top: var(--space-5);
+  letter-spacing: var(--tracking-normal);
+}

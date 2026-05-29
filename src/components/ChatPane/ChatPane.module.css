@@ -1,0 +1,103 @@
+.pane {
+  flex: 1 1 auto;
+  margin-top: var(--space-4);
+  background: var(--color-bg-app);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.pane::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-side-w2) 0 2px,
+    transparent 2px 3px,
+    var(--color-bg-canvas) 3px 5px,
+    transparent 5px 6px,
+    var(--color-side-w1) 6px 8px
+  );
+}
+
+.head {
+  padding: 12px 14px 6px;
+  font-family: var(--font-stencil);
+  font-size: var(--fs-300);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.1);
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--color-negative);
+  border-radius: 50%;
+  margin-right: var(--space-3);
+  box-shadow: 0 0 4px var(--color-negative);
+}
+
+.feed {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-5) var(--space-4);
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.msg {
+  font-family: var(--font-ui);
+  font-size: var(--fs-300);
+  line-height: 1.35;
+  color: var(--color-text-on-dark);
+  word-wrap: break-word;
+  padding: 1px var(--space-3);
+}
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--fs-100);
+  color: var(--color-text-muted);
+  margin-right: var(--space-3);
+}
+.nick {
+  font-family: var(--font-ui);
+  font-size: var(--fs-300);
+  font-weight: 700;
+  letter-spacing: var(--tracking-normal);
+  text-transform: uppercase;
+  margin-right: var(--space-3);
+}
+.nick.w1 { color: var(--color-side-w1); }
+.nick.w2 { color: var(--color-side-w2); }
+
+.system {
+  font-family: var(--font-stencil);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-align: center;
+  font-size: var(--fs-200);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  margin: var(--space-2) 0;
+  padding: var(--space-1) 0;
+  transform: rotate(-1deg);
+}
+
+.highlight {
+  background: rgba(255, 200, 61, 0.12);
+}

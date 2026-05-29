@@ -1,0 +1,44 @@
+.bar {
+  height: 32px;
+  background: var(--color-bg-app);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  border-top: 1px solid rgba(240, 234, 217, 0.1);
+  border-bottom: 1px solid rgba(240, 234, 217, 0.1);
+  opacity: 1;
+  transition: opacity var(--t-slow) ease;
+}
+.bar[data-visible='false'] { opacity: 0; pointer-events: none; }
+.bar::before {
+  content: 'ПОБЕДИТЕЛИ';
+  font-family: var(--font-stencil);
+  font-size: var(--fs-300);
+  font-weight: 700;
+  letter-spacing: var(--tracking-stencil);
+  color: var(--color-accent);
+  padding: 0 var(--space-5);
+  border-right: 1px solid rgba(255, 184, 28, 0.3);
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding-left: var(--space-6);
+  gap: var(--space-7);
+}
+.entry {
+  font-family: var(--font-ui);
+  font-size: var(--fs-300);
+  font-weight: 500;
+  color: var(--color-text-on-dark);
+  text-transform: uppercase;
+}
+.w1 { color: var(--color-side-w1); font-weight: 700; }
+.w2 { color: var(--color-side-w2); font-weight: 700; }
+.cross { color: var(--color-text-muted); margin: 0 var(--space-3); font-weight: 700; }

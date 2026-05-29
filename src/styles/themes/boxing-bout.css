@@ -1,0 +1,51 @@
+/*
+  Тема "Boxing Bout" — переопределяет дизайн-токены.
+  Активируется через атрибут на <html>: <html data-theme="boxing-bout">.
+
+  Чтобы добавить новую тему (cyberpunk / night-classic):
+    1. Создать src/styles/themes/<name>.css по этому шаблону
+    2. Переопределить нужные --color-* и --font-*
+    3. На <html> поставить data-theme="<name>"
+    4. Импортировать тему в main.tsx (или сделать динамический import)
+
+  Эта тема — каноничная для v0.2.x.
+  Палитра в README → DESIGN_NOTES.
+*/
+[data-theme='boxing-bout'] {
+  --color-bg-app: #0A0A0B;
+  --color-bg-panel: rgba(10, 10, 11, 0.96);
+  --color-bg-canvas: #F0EAD9;
+  --color-bg-canvas-warm: #E8E1D2;
+
+  --color-side-w1: #0050C8;
+  --color-side-w1-deep: #003DA5;
+  --color-side-w2: #D7152E;
+  --color-side-w2-deep: #C8102E;
+
+  --color-accent: #FFC83D;
+  --color-accent-deep: #FFB81C;
+  --color-accent-glow: rgba(255, 184, 28, 0.32);
+  --color-trophy: #E5B448;
+  --color-negative: #E81E2A;
+
+  --color-text-on-dark: #F0EAD9;
+  --color-text-on-light: #0A0A0B;
+  --color-text-muted: #9A9088;
+  --color-text-shadow: #6C6450;
+
+  /* В этой теме headline-семья — Anton, постерная */
+  --font-head: 'Anton', 'Bebas Neue', Impact, sans-serif;
+  --font-ui: 'Roboto Condensed', 'Inter', sans-serif;
+  --font-stencil: 'Stardos Stencil', 'Allerta Stencil', monospace;
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+/*
+  Глобальный фон страницы в этой теме.
+  Конкретные эффекты (силуэт зрительного зала, прожектор) — в компоненте Cityscape.
+*/
+[data-theme='boxing-bout'] body {
+  background: var(--color-bg-app);
+  color: var(--color-text-on-dark);
+  font-family: var(--font-ui);
+}
