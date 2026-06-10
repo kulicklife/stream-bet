@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="boxing-bout">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream Bet - Кабинет ставок блогера v0.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ════════ Токены (boxing-bout, совместимы с demo-v0.2.2) ════════ */
+:root{
+  --bg-app:#0A0A0B; --bg-canvas:#F0EAD9; --bg-canvas-warm:#E8E1D2;
+  --w1:#0050C8; --w1-deep:#003DA5; --w2:#D7152E; --w2-deep:#C8102E;
+  --accent:#FFC83D; --accent-deep:#FFB81C; --trophy:#E5B448;
+  --positive:#007030; --negative:#B83A2A;
+  --ink:#0A0A0B; --on-dark:#F0EAD9; --muted:#9A9088;
+  --head:'Anton',Impact,sans-serif; --ui:'Roboto Condensed',sans-serif; --mono:'Roboto Mono',monospace;
+  --shadow-flat:0 3px 0 rgba(0,0,0,.45); --shadow-press:0 1px 0 rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-app);color:var(--on-dark);font-family:var(--ui);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+button:disabled{cursor:not-allowed}
+
+/* ════════ Сцена ════════ */
+.stage{width:min(1180px,100%);background:var(--bg-canvas);border:2px solid var(--ink);box-shadow:0 0 0 3px var(--w1),0 0 0 6px var(--w2);}
+.phasebar{display:flex;align-items:center;justify-content:center;gap:18px;background:var(--ink);padding:10px 16px}
+.phasebar .round{font-family:var(--head);font-size:22px;letter-spacing:.06em;color:var(--on-dark)}
+.phasebar .phase{font-family:var(--head);font-size:22px;letter-spacing:.12em;color:var(--accent)}
+.phasebar .phase.locked{color:var(--negative)}
+.phasebar .clock{font-family:var(--mono);font-size:22px;font-weight:700;color:#fff;min-width:54px;text-align:center}
+.progress{height:5px;background:#3a3a3c}
+.progress i{display:block;height:100%;background:var(--negative);transition:width .25s linear}
+
+/* ════════ Кабинеты ════════ */
+.cabinets{display:grid;grid-template-columns:1fr 1fr;position:relative}
+.cabinets::after{content:"";position:absolute;left:50%;top:14px;bottom:14px;border-left:2px dashed rgba(10,10,11,.25)}
+.cabinet{padding:18px 22px 20px;color:var(--ink)}
+
+.cab-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:8px;margin-bottom:14px}
+.corner{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 8px;transform:rotate(-2deg)}
+.cab-w1 .corner{background:var(--w1)} .cab-w2 .corner{background:var(--w2);transform:rotate(2deg)}
+.cab-name{font-family:var(--head);font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.cab-w1 .cab-name{color:var(--w1-deep)} .cab-w2 .cab-name{color:var(--w2-deep)}
+.balance{font-family:var(--mono);font-size:22px;font-weight:700}
+.balance small{font-size:10px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block;text-align:right}
+.balance.bump{animation:bump .5s} @keyframes bump{30%{transform:scale(1.18)}}
+
+/* строка управления: ставка + исход */
+.ctrl-row{display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px}
+.picker{position:relative}
+.picker-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:10px 12px;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em;transition:transform .08s}
+.picker-btn:active{transform:translateY(2px);box-shadow:var(--shadow-press)}
+.picker-btn .caret{font-size:10px;opacity:.55}
+.picker-btn .odds{font-family:var(--mono);font-size:14px;color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
+.picker-btn[data-side="w1"]{background:var(--w1);color:#fff;border-color:var(--w1-deep)}
+.picker-btn[data-side="w2"]{background:var(--w2);color:#fff;border-color:var(--w2-deep)}
+.menu{position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:100%;background:#fff;border:2px solid var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.5);display:none}
+.menu.open{display:block}
+.menu button{display:flex;width:100%;justify-content:space-between;gap:16px;padding:9px 12px;font-size:15px;font-weight:700;text-transform:uppercase;border-bottom:1px solid rgba(10,10,11,.12)}
+.menu button:hover{background:var(--bg-canvas-warm)}
+.menu button:disabled{opacity:.35}
+.menu button .odds{font-family:var(--mono);color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
+.menu button.sel{background:var(--accent)}
+.menu .dot{display:inline-block;width:10px;height:10px;margin-right:6px;border:1px solid var(--ink)}
+.dot.w1{background:var(--w1)} .dot.w2{background:var(--w2)}
+
+/* конфиг серии */
+.series-cfg{display:none;align-items:center;gap:10px;background:var(--bg-canvas-warm);border:2px dashed rgba(10,10,11,.35);padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.series-cfg.show{display:flex;flex-wrap:wrap}
+.series-cfg .len{display:flex;gap:4px}
+.series-cfg .len button{width:34px;height:30px;border:2px solid var(--ink);background:#fff;font-weight:700;font-size:14px}
+.series-cfg .len button.sel{background:var(--ink);color:var(--accent)}
+.series-cfg .len button:disabled{opacity:.3}
+.series-rounds{font-family:var(--mono);color:var(--w1-deep)}
+.cab-w2 .series-rounds{color:var(--w2-deep)}
+
+/* действия */
+.actions{display:grid;grid-template-columns:1fr 92px;gap:10px;margin-bottom:6px}
+.play{font-family:var(--head);font-size:22px;letter-spacing:.14em;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:12px;transition:transform .08s}
+.play:hover:not(:disabled){background:var(--accent-deep)}
+.play:active:not(:disabled){transform:translateY(2px);box-shadow:var(--shadow-press)}
+.play:disabled{background:#cfc8b8;color:#7d776a}
+.auto{font-family:var(--head);font-size:13px;letter-spacing:.1em;border:2px solid var(--ink);box-shadow:var(--shadow-flat);background:#fff;color:var(--ink);padding:6px 4px;line-height:1.2}
+.auto .st{display:block;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.auto.on{background:var(--positive);color:#fff} .auto.on .st{color:#bfe8cd}
+.auto:disabled{opacity:.45}
+.limit-note{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.limit-note b{color:var(--ink)}
+.flash{color:var(--negative)!important;font-weight:700}
+
+/* активная серия */
+.active-series{display:none;align-items:center;gap:10px;background:var(--ink);color:var(--on-dark);padding:8px 12px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.active-series.show{display:flex;flex-wrap:wrap}
+.active-series .pips{display:flex;gap:4px}
+.active-series .pip{width:14px;height:14px;border:1px solid var(--on-dark);background:transparent}
+.active-series .pip.hit{background:var(--accent)}
+.active-series .wait{color:var(--accent)}
+
+/* мои ставки */
+.mybets h4{font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;border-top:2px dashed rgba(10,10,11,.3);padding-top:10px;margin-bottom:6px}
+.mybets ul{list-style:none;max-height:132px;overflow-y:auto}
+.mybets li{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;padding:4px 6px;border-left:4px solid var(--muted);margin-bottom:3px;background:rgba(255,255,255,.55)}
+.mybets li .lbl .dot{width:8px;height:8px}
+.mybets li .pay{font-family:var(--mono)}
+.mybets li.pending{border-left-color:var(--accent-deep)}
+.mybets li.won{border-left-color:var(--positive);color:var(--positive)}
+.mybets li.lost{border-left-color:var(--negative);color:var(--negative);opacity:.75;text-decoration:line-through}
+.mybets .empty{font-size:12px;color:var(--muted);letter-spacing:.08em;padding:4px 6px}
+
+/* ════════ Дев-панель ════════ */
+.devbar{display:flex;gap:6px;align-items:center;margin-top:14px;font-size:11px;color:var(--muted)}
+.devbar button{background:#fff;border:1px solid #555;color:#111;font-size:11px;padding:3px 8px}
+.devbar button.sel{background:var(--negative);color:#fff}
+.footnote{margin-top:8px;font-size:11px;color:#6a6a6e;letter-spacing:.06em}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phasebar">
+    <span class="round" id="hRound">РАУНД №3</span>
+    <span class="phase" id="hPhase">ПРИЕМ СТАВОК</span>
+    <span class="clock" id="hClock">0:20</span>
+  </div>
+  <div class="progress"><i id="hProg" style="width:100%"></i></div>
+
+  <div class="cabinets" id="cabs"></div>
+</div>
+
+<div class="devbar">
+  <span>dev / BETTING OPEN:</span>
+  <button data-t="4">4 сек</button>
+  <button data-t="10">10 сек</button>
+  <button data-t="20" class="sel">20 сек</button>
+  <button data-t="99999">∞</button>
+</div>
+<div class="footnote">bet-cabinet v0.3 - интерактивная спека для фронта. Исходы раундов в симуляции случайные 50/50.</div>
+
+<script>
+/* ════════════════ КОНСТАНТЫ (источник: Требования v3, раздел 1.6.1) ════════════════ */
+/* Коэффициенты зафиксированы (решение от 2026-06-10):
+   серия 1 - 1.90 (маржа 5.00%), серия 2 - 3.69 (7.84%), серия 3 - 7.08 (11.53%),
+   серия 4 - 13.60 (15.07%), серия 5 - 26.09 (18.46%). */
+const ROUND_ODDS = 1.90;                                  // = серия 1, отдельным маркетом
+const SERIES_ODDS = {2:3.69, 3:7.08, 4:13.60, 5:26.09};   // N побед ПОДРЯД, фикс. таблица
+const STAKES = [1,3,5,10,15,20,50,100];                    // номиналы USD (решение 2026-06-10)
+const LIMIT = 0.10;                                        // лимит ставки: 10% от баланса
+const TOTAL_ROUNDS = 54;
+const SIDES = {w1:{label:'СИНИЙ', name:'СЕНТИПЕДА'}, w2:{label:'КРАСНЫЙ', name:'БОБЕР'}};
+
+/* ════════════════ СОСТОЯНИЕ ════════════════ */
+const G = { round:3, phase:'BETTING', tLeft:20, tTotal:20, betTime:20 };
+const P = {};
+for (const k of ['w1','w2']) P[k] = {
+  balance:1000, stake:10,
+  sel:{type:'round', side:k},   // дефолт: ставка на себя, исход раунда
+  seriesLen:2, auto:false, bets:[]
+};
+P.w2.stake = 10;
+
+const $ = s => document.querySelector(s);
+const fmt$ = n => '$' + n.toLocaleString('en-US');
+const maxStake = p => Math.floor(p.balance * LIMIT);
+const oddsFor = (sel,len) => sel.type==='round' ? ROUND_ODDS : SERIES_ODDS[len];
+
+/* ════════════════ РАЗМЕТКА КАБИНЕТОВ ════════════════ */
+function cabinetHTML(who){
+  const s = SIDES[who];
+  return `<div class="cabinet cab-${who}" data-who="${who}">
+    <div class="cab-head">
+      <div><span class="corner">${s.label} УГОЛ</span>
+        <div class="cab-name">${s.name}</div></div>
+      <div class="balance" id="bal-${who}"><small>БАЛАНС</small>${fmt$(1000)}</div>
+    </div>
+    <div class="ctrl-row">
+      <div class="picker">
+        <button class="picker-btn" id="stakeBtn-${who}"></button>
+        <div class="menu" id="stakeMenu-${who}"></div>
+      </div>
+      <div class="picker">
+        <button class="picker-btn" id="outBtn-${who}"></button>
+        <div class="menu" id="outMenu-${who}"></div>
+      </div>
+    </div>
+    <div class="series-cfg" id="seriesCfg-${who}">
+      <span>СЕРИЯ ПОДРЯД:</span>
+      <span class="len" id="lenSeg-${who}"></span>
+      <span>РАУНДЫ <span class="series-rounds" id="seriesRounds-${who}"></span></span>
+    </div>
+    <div class="actions">
+      <button class="play" id="play-${who}">СТАВКА ▶</button>
+      <button class="auto" id="auto-${who}">АВТО<span class="st">ВЫКЛ</span></button>
+    </div>
+    <div class="limit-note" id="limit-${who}"></div>
+    <div class="active-series" id="as-${who}"></div>
+    <div class="mybets"><h4>Мои ставки</h4><ul id="bets-${who}"><li class="empty">пока нет ставок</li></ul></div>
+  </div>`;
+}
+$('#cabs').innerHTML = cabinetHTML('w1') + cabinetHTML('w2');
+
+/* ════════════════ РЕНДЕР ════════════════ */
+function renderCab(who){
+  const p = P[who], betting = G.phase==='BETTING';
+  const mx = maxStake(p);
+
+  // баланс и лимит
+  $('#bal-'+who).innerHTML = `<small>БАЛАНС</small>${fmt$(p.balance)}`;
+  $('#limit-'+who).innerHTML = `ЛИМИТ СТАВКИ 10% ОТ БАЛАНСА · МАКС <b>${fmt$(mx)}</b>`;
+
+  // ставка
+  if (p.stake > mx) p.stake = STAKES.filter(s=>s<=mx).pop() || 0;
+  $('#stakeBtn-'+who).innerHTML = `<span>${fmt$(p.stake)}</span><span class="caret">▼</span>`;
+  $('#stakeMenu-'+who).innerHTML = STAKES.map(s=>
+    `<button data-stake="${s}" ${s>mx?'disabled':''} class="${s===p.stake?'sel':''}">
+      <span>${fmt$(s)}</span>${s>mx?'<span style="font-size:10px">>10%</span>':''}</button>`).join('');
+
+  // исход
+  const sel = p.sel, odds = oddsFor(sel, p.seriesLen);
+  const sideTxt = side => `<span class="dot ${side}"></span>${side==='w1'?'ПОБЕДА СИНИЙ':'ПОБЕДА КРАСНЫЙ'}`;
+  const serTxt  = side => `<span class="dot ${side}"></span>${side==='w1'?'СЕРИЯ СИНИЙ':'СЕРИЯ КРАСНЫЙ'}`;
+  $('#outBtn-'+who).dataset.side = sel.side;
+  $('#outBtn-'+who).innerHTML =
+    `<span>${sel.type==='round' ? (sel.side==='w1'?'ПОБЕДА СИНИЙ':'ПОБЕДА КРАСНЫЙ')
+                                : (sel.side==='w1'?'СЕРИЯ СИНИЙ':'СЕРИЯ КРАСНЫЙ')}</span>
+     <span><span class="odds">×${odds.toFixed(2)}</span> <span class="caret">▼</span></span>`;
+  const hasSeries = p.bets.some(b=>b.type==='series' && b.status==='pending');
+  $('#outMenu-'+who).innerHTML = [
+    {t:'round',s:'w1',h:sideTxt('w1'),o:ROUND_ODDS},
+    {t:'round',s:'w2',h:sideTxt('w2'),o:ROUND_ODDS},
+    {t:'series',s:'w1',h:serTxt('w1'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
+    {t:'series',s:'w2',h:serTxt('w2'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
+  ].map((m,i)=>`<button data-out="${m.t}:${m.s}" ${m.d?'disabled':''}
+      class="${sel.type===m.t&&sel.side===m.s?'sel':''}">
+      <span>${m.h}</span><span class="odds">×${m.o.toFixed(2)}</span></button>`).join('')
+    + (hasSeries ? '<button disabled><span style="font-size:11px;text-transform:none">серия уже активна - одна за раз</span></button>' : '');
+
+  // конфиг серии: старт всегда = текущий раунд, видна только длина
+  const cfg = $('#seriesCfg-'+who);
+  cfg.classList.toggle('show', sel.type==='series');
+  if (sel.type==='series'){
+    const maxLen = Math.min(5, TOTAL_ROUNDS - G.round + 1);
+    if (p.seriesLen > maxLen) p.seriesLen = maxLen;
+    $('#lenSeg-'+who).innerHTML = [2,3,4,5].map(n=>
+      `<button data-len="${n}" ${n>maxLen?'disabled':''} class="${n===p.seriesLen?'sel':''}">${n}</button>`).join('');
+    $('#seriesRounds-'+who).textContent = `${G.round} - ${G.round + p.seriesLen - 1}`;
+  }
+
+  // кнопки: одна round-ставка на раунд, одна активная серия
+  const roundDone = p.bets.some(b=>b.type==='round' && b.round===G.round);
+  const blockRound  = sel.type==='round'  && roundDone;
+  const blockSeries = sel.type==='series' && hasSeries;
+  const canPlay = betting && p.stake>0 && p.stake<=mx && !blockRound && !blockSeries;
+  const play = $('#play-'+who);
+  play.disabled = !canPlay;
+  play.textContent = !betting ? 'СТАВКИ ЗАКРЫТЫ'
+                   : blockRound  ? 'СТАВКА СДЕЛАНА ✓'
+                   : blockSeries ? 'СЕРИЯ АКТИВНА'
+                   : 'СТАВКА ▶';
+  const auto = $('#auto-'+who);
+  auto.classList.toggle('on', p.auto);
+  auto.disabled = sel.type==='series';
+  auto.innerHTML = `АВТО<span class="st">${sel.type==='series'?'ТОЛЬКО РАУНД':(p.auto?'ВКЛ':'ВЫКЛ')}</span>`;
+
+  // активная серия: прогресс "выиграл N из M"
+  const as = $('#as-'+who);
+  const act = p.bets.find(b=>b.type==='series' && b.status==='pending');
+  as.classList.toggle('show', !!act);
+  if (act){
+    const len = act.to - act.from + 1;
+    const pips = Array.from({length:len},(_,i)=>`<span class="pip ${i<act.wins?'hit':''}"></span>`).join('');
+    as.innerHTML = `<span class="dot ${act.side}"></span>
+      <span>СЕРИЯ ${act.side==='w1'?'СИН':'КРС'} · Р${act.from}-${act.to}</span>
+      <span class="pips">${pips}</span>
+      <span>ВЫИГРАНО ${act.wins} ИЗ ${len}</span>
+      <span class="wait">ЖДЕМ РАУНД ${Math.max(G.round, act.from + act.wins)}</span>`;
+  }
+
+  // мои ставки
+  const ul = $('#bets-'+who);
+  ul.innerHTML = p.bets.length ? p.bets.slice(-8).reverse().map(b=>{
+    const lbl = b.type==='round'
+      ? `<span class="dot ${b.side}"></span>Р${b.round} · ${b.side==='w1'?'СИН':'КРС'}`
+      : `<span class="dot ${b.side}"></span>СЕРИЯ ${b.from}-${b.to} · ${b.side==='w1'?'СИН':'КРС'}${b.status==='pending'?` · ${b.wins}/${b.to-b.from+1}`:''}`;
+    const pay = b.status==='won' ? '+'+fmt$(b.payout)
+              : b.status==='lost' ? '-'+fmt$(b.stake)
+              : `${fmt$(b.stake)} ×${b.odds.toFixed(2)} → ${fmt$(Math.round(b.stake*b.odds))}`;
+    return `<li class="${b.status}"><span class="lbl">${lbl}</span><span class="pay">${pay}</span></li>`;
+  }).join('') : '<li class="empty">пока нет ставок</li>';
+}
+function renderTop(){
+  $('#hRound').textContent = 'РАУНД №' + G.round;
+  const ph = $('#hPhase');
+  ph.textContent = {BETTING:'ПРИЕМ СТАВОК', SELECT:'ВЫБОР КАРТЫ', RESULT:'РЕЗУЛЬТАТ'}[G.phase];
+  ph.classList.toggle('locked', G.phase!=='BETTING');
+  $('#hClock').textContent = '0:' + String(Math.max(0,Math.ceil(G.tLeft))).padStart(2,'0');
+  $('#hProg').style.width = (100*G.tLeft/G.tTotal) + '%';
+}
+function renderAll(){ renderTop(); renderCab('w1'); renderCab('w2'); }
+
+/* ════════════════ СТАВКИ ════════════════ */
+function placeBet(who){
+  const p = P[who], sel = p.sel;
+  if (G.phase!=='BETTING' || p.stake<=0 || p.stake>maxStake(p)) return;
+  if (sel.type==='round'  && p.bets.some(b=>b.type==='round'&&b.round===G.round)) return;
+  if (sel.type==='series' && p.bets.some(b=>b.type==='series'&&b.status==='pending')) return;
+  p.balance -= p.stake;
+  const bet = sel.type==='round'
+    ? {type:'round', side:sel.side, round:G.round, stake:p.stake, odds:ROUND_ODDS, status:'pending'}
+    : {type:'series', side:sel.side, from:G.round, to:G.round+p.seriesLen-1,
+       stake:p.stake, odds:SERIES_ODDS[p.seriesLen], status:'pending', wins:0};
+  p.bets.push(bet);
+  const b = $('#bal-'+who); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+  renderAll();
+}
+function settle(winner){
+  for (const who of ['w1','w2']){
+    const p = P[who];
+    for (const b of p.bets){
+      if (b.status!=='pending') continue;
+      if (b.type==='round' && b.round===G.round){
+        if (b.side===winner){ b.status='won'; b.payout=Math.round(b.stake*b.odds); p.balance+=b.payout; }
+        else b.status='lost';
+      }
+      if (b.type==='series' && G.round>=b.from && G.round<=b.to){
+        if (b.side!==winner) b.status='lost';                       // серия прервана
+        else { b.wins++;
+          if (G.round===b.to){ b.status='won'; b.payout=Math.round(b.stake*b.odds); p.balance+=b.payout; } }
+      }
+    }
+  }
+}
+function autoplay(){
+  for (const who of ['w1','w2']){
+    const p = P[who];
+    if (!p.auto || p.sel.type!=='round') continue;
+    if (p.stake<=maxStake(p) && p.stake>0) placeBet(who);
+    else { p.auto=false; const el=$('#limit-'+who); el.classList.add('flash');
+           setTimeout(()=>el.classList.remove('flash'),1500); }
+  }
+}
+
+/* ════════════════ ФАЗОВЫЙ ЦИКЛ (симуляция game loop) ════════════════ */
+function setPhase(phase, dur){ G.phase=phase; G.tLeft=dur; G.tTotal=dur; renderAll(); }
+setInterval(()=>{
+  G.tLeft -= .2;
+  if (G.tLeft > 0) { renderTop(); return; }
+  if (G.phase==='BETTING') setPhase('SELECT',3);
+  else if (G.phase==='SELECT'){ settle(Math.random()<.5?'w1':'w2'); setPhase('RESULT',3); }
+  else { G.round = G.round%TOTAL_ROUNDS + 1; setPhase('BETTING', G.betTime); autoplay(); }
+},200);
+
+/* ════════════════ СОБЫТИЯ ════════════════ */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('button');
+  document.querySelectorAll('.menu.open').forEach(m=>{ if(!m.contains(e.target)) m.classList.remove('open'); });
+  if (!t) return;
+  const cab = t.closest('.cabinet'); if (!cab) {
+    if (t.dataset.t){ G.betTime=+t.dataset.t;
+      document.querySelectorAll('.devbar button').forEach(b=>b.classList.toggle('sel',b===t)); }
+    return;
+  }
+  const who = cab.dataset.who, p = P[who];
+  if (t.id==='stakeBtn-'+who) $('#stakeMenu-'+who).classList.toggle('open');
+  if (t.id==='outBtn-'+who)   $('#outMenu-'+who).classList.toggle('open');
+  if (t.dataset.stake){ p.stake=+t.dataset.stake; $('#stakeMenu-'+who).classList.remove('open'); renderAll(); }
+  if (t.dataset.out){ const [type,side]=t.dataset.out.split(':'); p.sel={type,side};
+    if(type==='series') p.auto=false;
+    $('#outMenu-'+who).classList.remove('open'); renderAll(); }
+  if (t.dataset.len){ p.seriesLen=+t.dataset.len; renderAll(); }
+  if (t.id==='play-'+who) placeBet(who);
+  if (t.id==='auto-'+who && p.sel.type==='round'){ p.auto=!p.auto; renderAll(); }
+});
+
+/* dev-фикстура: ?state=series открывает конфиг серии у синего
+   и показывает активную серию с прогрессом у красного */
+if (location.search.includes('state=series')){
+  P.w1.sel = {type:'series', side:'w1'}; P.w1.seriesLen = 3;
+  P.w2.balance = 990;
+  P.w2.bets.push({type:'series', side:'w2', from:2, to:4, stake:10, odds:7.08, status:'pending', wins:1});
+  P.w2.bets.push({type:'round', side:'w1', round:2, stake:10, odds:1.90, status:'lost'});
+}
+renderAll();
+</script>
+</body>
+</html>
