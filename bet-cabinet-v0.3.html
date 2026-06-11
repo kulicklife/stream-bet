@@ -27,9 +27,13 @@ button:disabled{cursor:not-allowed}
 
 /* ── Шапка: угол - таймер - угол ── */
 .top{display:grid;grid-template-columns:1fr 380px 1fr;gap:10px}
-.fighter{display:flex;align-items:center;gap:14px;background:var(--bg-canvas);color:var(--ink);padding:10px 16px;position:relative;border:2px solid var(--ink)}
+.fighter{display:flex;align-items:center;gap:14px;background:var(--bg-canvas);color:var(--ink);padding:10px 16px;position:relative;border:2px solid var(--ink);min-width:0}
 .fighter.f-w1{box-shadow:0 0 0 3px var(--w1)}
-.fighter.f-w2{box-shadow:0 0 0 3px var(--w2);justify-content:flex-start}
+.fighter.f-w2{box-shadow:0 0 0 3px var(--w2);flex-direction:row-reverse}
+.fighter .bal{margin-left:auto;text-align:right;font-family:var(--mono);font-size:24px;font-weight:700;white-space:nowrap}
+.f-w2 .bal{margin-left:0;margin-right:auto;text-align:left}
+.fighter .bal small{font-size:9px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block}
+.fighter .bal.bump{animation:bump .5s}
 .fighter .ava{width:56px;height:56px;border:2px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px}
 .fighter .fname{font-family:var(--head);font-size:34px;letter-spacing:.04em;text-transform:uppercase}
 .corner{position:absolute;top:-8px;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 10px}
@@ -44,6 +48,7 @@ button:disabled{cursor:not-allowed}
 
 /* ── Центр: видео - панель - видео ── */
 .mid{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;min-height:0}
+.mid>*{min-width:0}
 .cam{border:2px solid;display:flex;align-items:center;justify-content:center;background:#000;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.22em;text-align:center;padding:10px}
 .cam.c-w1{border-color:var(--w1)} .cam.c-w2{border-color:var(--w2)}
 
@@ -51,17 +56,23 @@ button:disabled{cursor:not-allowed}
 .panel-title{text-align:center;padding:12px 10px 8px;font-family:var(--head);font-size:20px;letter-spacing:.08em;border-bottom:2px solid var(--ink);margin:0 16px 12px}
 .panel-title .phw{color:var(--accent-deep)} .panel-title .phw.locked{color:var(--negative-bright)}
 
-.cabinets{display:grid;grid-template-columns:1fr 1fr;position:relative;flex:1}
+.cabinets{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);position:relative;flex:1}
 .cabinets::after{content:"";position:absolute;left:50%;top:4px;bottom:10px;border-left:2px dashed rgba(10,10,11,.22)}
-.cabinet{padding:0 18px 14px}
+.cabinet{padding:0 18px 14px;min-width:0}
 
-/* шапка кабинета - слим: имя + баланс (углы и ники уже в шапке игры) */
-.cab-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:6px;margin-bottom:12px}
-.cab-name{font-family:var(--head);font-size:19px;letter-spacing:.05em;text-transform:uppercase}
-.cab-w1 .cab-name{color:var(--w1-deep)} .cab-w2 .cab-name{color:var(--w2-deep)}
-.balance{font-family:var(--mono);font-size:19px;font-weight:700}
-.balance small{font-size:9px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block;text-align:right}
-.balance.bump{animation:bump .5s} @keyframes bump{30%{transform:scale(1.18)}}
+/* метка кабинета: только цвет угла, без дублирования ника */
+.cab-strip{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cab-strip i{flex:1;height:7px}
+.cab-w1 .cab-strip i{background:var(--w1)} .cab-w2 .cab-strip i{background:var(--w2)}
+.cab-strip span{font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+@keyframes bump{30%{transform:scale(1.18)}}
+
+/* штамп "ставки закрыты" поверх притушенных контролов */
+.lockzone{position:relative}
+.locked .lockzone .ctrls{opacity:.4;pointer-events:none;filter:grayscale(.6)}
+.stamp{display:none;position:absolute;inset:0;align-items:center;justify-content:center;z-index:5;pointer-events:none}
+.locked .stamp{display:flex}
+.stamp span{font-family:var(--head);font-size:19px;letter-spacing:.14em;color:var(--negative-bright);border:3px solid var(--negative-bright);padding:6px 18px;transform:rotate(-7deg);background:rgba(240,234,217,.9)}
 
 /* строка управления: ставка + исход */
 .ctrl-row{display:grid;grid-template-columns:96px 1fr;gap:8px;margin-bottom:9px}
@@ -153,14 +164,16 @@ button:disabled{cursor:not-allowed}
   <!-- Шапка -->
   <div class="top">
     <div class="fighter f-w1"><span class="corner">СИНИЙ УГОЛ</span>
-      <span class="ava">🥊</span><span class="fname">СЕНТИПЕДА</span></div>
+      <span class="ava">🥊</span><span class="fname">СЕНТИПЕДА</span>
+      <span class="bal" id="topbal-w1"><small>БАЛАНС</small>$1,000</span></div>
     <div class="timerbox">
       <span class="ph" id="hPh">ПРИЕМ СТАВОК</span>
       <span class="big" id="hBig">20</span>
       <span class="bar"><i id="hProg" style="width:100%"></i></span>
     </div>
     <div class="fighter f-w2"><span class="corner">КРАСНЫЙ УГОЛ</span>
-      <span class="ava">🥊</span><span class="fname">БОБЕР</span></div>
+      <span class="ava">🥊</span><span class="fname">БОБЕР</span>
+      <span class="bal" id="topbal-w2"><small>БАЛАНС</small>$1,000</span></div>
   </div>
 
   <!-- Видео + панель ставок -->
@@ -225,30 +238,32 @@ const oddsFor = (sel,len) => sel.type==='round' ? ROUND_ODDS : SERIES_ODDS[len];
 function cabinetHTML(who){
   const s = SIDES[who];
   return `<div class="cabinet cab-${who}" data-who="${who}">
-    <div class="cab-head">
-      <span class="cab-name">${s.name}</span>
-      <span class="balance" id="bal-${who}"><small>БАЛАНС</small>${fmt$(1000)}</span>
-    </div>
-    <div class="ctrl-row">
-      <div class="picker">
-        <button class="picker-btn" id="stakeBtn-${who}"></button>
-        <div class="menu" id="stakeMenu-${who}"></div>
+    <div class="cab-strip"><i></i><span>СТАВКИ · ${s.label} УГОЛ</span><i></i></div>
+    <div class="lockzone">
+      <div class="ctrls">
+        <div class="ctrl-row">
+          <div class="picker">
+            <button class="picker-btn" id="stakeBtn-${who}"></button>
+            <div class="menu" id="stakeMenu-${who}"></div>
+          </div>
+          <div class="picker">
+            <button class="picker-btn" id="outBtn-${who}"></button>
+            <div class="menu" id="outMenu-${who}"></div>
+          </div>
+        </div>
+        <div class="series-cfg" id="seriesCfg-${who}">
+          <span>СЕРИЯ ПОДРЯД:</span>
+          <span class="len" id="lenSeg-${who}"></span>
+          <span>РАУНДЫ <span class="series-rounds" id="seriesRounds-${who}"></span></span>
+        </div>
+        <div class="actions">
+          <button class="play" id="play-${who}">СТАВКА ▶</button>
+          <button class="auto" id="auto-${who}">АВТО<span class="st">ВЫКЛ</span></button>
+        </div>
+        <div class="limit-note" id="limit-${who}"></div>
       </div>
-      <div class="picker">
-        <button class="picker-btn" id="outBtn-${who}"></button>
-        <div class="menu" id="outMenu-${who}"></div>
-      </div>
+      <div class="stamp"><span>СТАВКИ ЗАКРЫТЫ</span></div>
     </div>
-    <div class="series-cfg" id="seriesCfg-${who}">
-      <span>СЕРИЯ ПОДРЯД:</span>
-      <span class="len" id="lenSeg-${who}"></span>
-      <span>РАУНДЫ <span class="series-rounds" id="seriesRounds-${who}"></span></span>
-    </div>
-    <div class="actions">
-      <button class="play" id="play-${who}">СТАВКА ▶</button>
-      <button class="auto" id="auto-${who}">АВТО<span class="st">ВЫКЛ</span></button>
-    </div>
-    <div class="limit-note" id="limit-${who}"></div>
     <div class="active-series" id="as-${who}"></div>
     <div class="mybets"><h4>Мои ставки</h4><ul id="bets-${who}"><li class="empty">пока нет ставок</li></ul></div>
   </div>`;
@@ -260,9 +275,10 @@ function renderCab(who){
   const p = P[who], betting = G.phase==='BETTING';
   const mx = maxStake(p);
 
-  // баланс и лимит
-  $('#bal-'+who).innerHTML = `<small>БАЛАНС</small>${fmt$(p.balance)}`;
+  // баланс (в шапке бойца) и лимит
+  $('#topbal-'+who).innerHTML = `<small>БАЛАНС</small>${fmt$(p.balance)}`;
   $('#limit-'+who).innerHTML = `ЛИМИТ СТАВКИ 10% ОТ БАЛАНСА · МАКС <b>${fmt$(mx)}</b>`;
+  document.querySelector('.cab-'+who).classList.toggle('locked', !betting);
 
   // ставка
   if (p.stake > mx) p.stake = STAKES.filter(s=>s<=mx).pop() || 0;
@@ -309,8 +325,7 @@ function renderCab(who){
   const canPlay = betting && p.stake>0 && p.stake<=mx && !blockRound && !blockSeries;
   const play = $('#play-'+who);
   play.disabled = !canPlay;
-  play.textContent = !betting ? 'СТАВКИ ЗАКРЫТЫ'
-                   : blockRound  ? 'СТАВКА СДЕЛАНА ✓'
+  play.textContent = blockRound  ? 'СТАВКА СДЕЛАНА ✓'
                    : blockSeries ? 'СЕРИЯ АКТИВНА'
                    : 'СТАВКА ▶';
   const auto = $('#auto-'+who);
@@ -351,7 +366,7 @@ function renderTop(){
   ph.classList.toggle('locked', G.phase!=='BETTING');
   $('#hBig').textContent = Math.max(0, Math.ceil(G.tLeft));
   $('#hProg').style.width = (100*G.tLeft/G.tTotal) + '%';
-  $('#pTitle').innerHTML = `РАУНД №${G.round} · <span class="phw ${G.phase!=='BETTING'?'locked':''}">${ph.textContent}</span>`;
+  $('#pTitle').textContent = `РАУНД №${G.round}`;
 }
 function renderFoot(){
   const w1 = G.history.filter(h=>h==='w1').length, w2 = G.history.length - w1;
@@ -373,7 +388,7 @@ function placeBet(who){
     : {type:'series', side:sel.side, from:G.round, to:G.round+p.seriesLen-1,
        stake:p.stake, odds:SERIES_ODDS[p.seriesLen], status:'pending', wins:0};
   p.bets.push(bet);
-  const b = $('#bal-'+who); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+  const b = $('#topbal-'+who); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
   renderAll();
 }
 function settle(winner){
@@ -445,6 +460,8 @@ if (location.search.includes('state=series')){
   P.w2.bets.push({type:'round', side:'w1', round:2, stake:10, odds:1.90, status:'lost'});
   G.history.push('w2');
 }
+/* ?phase=locked - показать состояние вне приема ставок (штамп) */
+if (location.search.includes('phase=locked')){ G.phase='RESULT'; G.tLeft=99; G.tTotal=99; }
 renderAll();
 </script>
 </body>
