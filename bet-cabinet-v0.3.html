@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stream Bet - Кабинет ставок блогера v0.3</title>
+<title>Stream Bet - Кабинет ставок блогера v0.3.1 (полная компоновка)</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* ════════ Токены (boxing-bout, совместимы с demo-v0.2.2) ════════ */
@@ -11,120 +11,179 @@
   --bg-app:#0A0A0B; --bg-canvas:#F0EAD9; --bg-canvas-warm:#E8E1D2;
   --w1:#0050C8; --w1-deep:#003DA5; --w2:#D7152E; --w2-deep:#C8102E;
   --accent:#FFC83D; --accent-deep:#FFB81C; --trophy:#E5B448;
-  --positive:#007030; --negative:#B83A2A;
+  --positive:#007030; --negative:#B83A2A; --negative-bright:#E81E2A;
   --ink:#0A0A0B; --on-dark:#F0EAD9; --muted:#9A9088;
   --head:'Anton',Impact,sans-serif; --ui:'Roboto Condensed',sans-serif; --mono:'Roboto Mono',monospace;
   --shadow-flat:0 3px 0 rgba(0,0,0,.45); --shadow-press:0 1px 0 rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg-app);color:var(--on-dark);font-family:var(--ui);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px}
+html,body{height:100%}
+body{background:var(--bg-app);color:var(--on-dark);font-family:var(--ui);display:flex;flex-direction:column;padding:10px 12px 6px}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
 button:disabled{cursor:not-allowed}
 
-/* ════════ Сцена ════════ */
-.stage{width:min(1180px,100%);background:var(--bg-canvas);border:2px solid var(--ink);box-shadow:0 0 0 3px var(--w1),0 0 0 6px var(--w2);}
-.phasebar{display:flex;align-items:center;justify-content:center;gap:18px;background:var(--ink);padding:10px 16px}
-.phasebar .round{font-family:var(--head);font-size:22px;letter-spacing:.06em;color:var(--on-dark)}
-.phasebar .phase{font-family:var(--head);font-size:22px;letter-spacing:.12em;color:var(--accent)}
-.phasebar .phase.locked{color:var(--negative)}
-.phasebar .clock{font-family:var(--mono);font-size:22px;font-weight:700;color:#fff;min-width:54px;text-align:center}
-.progress{height:5px;background:#3a3a3c}
-.progress i{display:block;height:100%;background:var(--negative);transition:width .25s linear}
+/* ════════ Компоновка игры ════════ */
+.app{flex:1;display:grid;grid-template-rows:auto minmax(420px,1fr) auto;gap:10px;min-height:0}
 
-/* ════════ Кабинеты ════════ */
-.cabinets{display:grid;grid-template-columns:1fr 1fr;position:relative}
-.cabinets::after{content:"";position:absolute;left:50%;top:14px;bottom:14px;border-left:2px dashed rgba(10,10,11,.25)}
-.cabinet{padding:18px 22px 20px;color:var(--ink)}
+/* ── Шапка: угол - таймер - угол ── */
+.top{display:grid;grid-template-columns:1fr 380px 1fr;gap:10px}
+.fighter{display:flex;align-items:center;gap:14px;background:var(--bg-canvas);color:var(--ink);padding:10px 16px;position:relative;border:2px solid var(--ink)}
+.fighter.f-w1{box-shadow:0 0 0 3px var(--w1)}
+.fighter.f-w2{box-shadow:0 0 0 3px var(--w2);justify-content:flex-start}
+.fighter .ava{width:56px;height:56px;border:2px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px}
+.fighter .fname{font-family:var(--head);font-size:34px;letter-spacing:.04em;text-transform:uppercase}
+.corner{position:absolute;top:-8px;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 10px}
+.f-w1 .corner{left:10px;background:var(--w1);transform:rotate(-2deg)}
+.f-w2 .corner{right:10px;background:var(--w2);transform:rotate(2deg)}
+.timerbox{background:#000;border:2px solid var(--bg-canvas);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;gap:2px}
+.timerbox .ph{font-family:var(--head);font-size:16px;letter-spacing:.22em;color:var(--accent)}
+.timerbox .ph.locked{color:var(--negative-bright)}
+.timerbox .big{font-family:var(--head);font-size:54px;line-height:1;color:var(--negative-bright)}
+.timerbox .bar{width:85%;height:6px;background:#3a3a3c;margin-top:6px}
+.timerbox .bar i{display:block;height:100%;background:var(--negative-bright);transition:width .25s linear}
 
-.cab-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:8px;margin-bottom:14px}
-.corner{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 8px;transform:rotate(-2deg)}
-.cab-w1 .corner{background:var(--w1)} .cab-w2 .corner{background:var(--w2);transform:rotate(2deg)}
-.cab-name{font-family:var(--head);font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+/* ── Центр: видео - панель - видео ── */
+.mid{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;min-height:0}
+.cam{border:2px solid;display:flex;align-items:center;justify-content:center;background:#000;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.22em;text-align:center;padding:10px}
+.cam.c-w1{border-color:var(--w1)} .cam.c-w2{border-color:var(--w2)}
+
+.panel{background:var(--bg-canvas);color:var(--ink);border-top:6px solid;border-bottom:6px solid;border-image:repeating-linear-gradient(90deg,var(--w1) 0 33%,#fff 33% 50%,var(--w2) 50% 100%) 6;display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.panel-title{text-align:center;padding:12px 10px 8px;font-family:var(--head);font-size:20px;letter-spacing:.08em;border-bottom:2px solid var(--ink);margin:0 16px 12px}
+.panel-title .phw{color:var(--accent-deep)} .panel-title .phw.locked{color:var(--negative-bright)}
+
+.cabinets{display:grid;grid-template-columns:1fr 1fr;position:relative;flex:1}
+.cabinets::after{content:"";position:absolute;left:50%;top:4px;bottom:10px;border-left:2px dashed rgba(10,10,11,.22)}
+.cabinet{padding:0 18px 14px}
+
+/* шапка кабинета - слим: имя + баланс (углы и ники уже в шапке игры) */
+.cab-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:6px;margin-bottom:12px}
+.cab-name{font-family:var(--head);font-size:19px;letter-spacing:.05em;text-transform:uppercase}
 .cab-w1 .cab-name{color:var(--w1-deep)} .cab-w2 .cab-name{color:var(--w2-deep)}
-.balance{font-family:var(--mono);font-size:22px;font-weight:700}
-.balance small{font-size:10px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block;text-align:right}
+.balance{font-family:var(--mono);font-size:19px;font-weight:700}
+.balance small{font-size:9px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block;text-align:right}
 .balance.bump{animation:bump .5s} @keyframes bump{30%{transform:scale(1.18)}}
 
 /* строка управления: ставка + исход */
-.ctrl-row{display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px}
+.ctrl-row{display:grid;grid-template-columns:96px 1fr;gap:8px;margin-bottom:9px}
 .picker{position:relative}
-.picker-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:10px 12px;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em;transition:transform .08s}
+.picker-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:9px 10px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em;transition:transform .08s}
 .picker-btn:active{transform:translateY(2px);box-shadow:var(--shadow-press)}
-.picker-btn .caret{font-size:10px;opacity:.55}
-.picker-btn .odds{font-family:var(--mono);font-size:14px;color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
+.picker-btn .caret{font-size:9px;opacity:.55}
+.picker-btn .odds{font-family:var(--mono);font-size:13px;color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
 .picker-btn[data-side="w1"]{background:var(--w1);color:#fff;border-color:var(--w1-deep)}
 .picker-btn[data-side="w2"]{background:var(--w2);color:#fff;border-color:var(--w2-deep)}
-.menu{position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:100%;background:#fff;border:2px solid var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.5);display:none}
+.menu{position:absolute;z-index:30;top:calc(100% + 5px);left:0;min-width:100%;background:#fff;border:2px solid var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.5);display:none;max-height:260px;overflow-y:auto}
 .menu.open{display:block}
-.menu button{display:flex;width:100%;justify-content:space-between;gap:16px;padding:9px 12px;font-size:15px;font-weight:700;text-transform:uppercase;border-bottom:1px solid rgba(10,10,11,.12)}
+.menu button{display:flex;width:100%;justify-content:space-between;gap:14px;padding:8px 10px;font-size:14px;font-weight:700;text-transform:uppercase;border-bottom:1px solid rgba(10,10,11,.12)}
 .menu button:hover{background:var(--bg-canvas-warm)}
 .menu button:disabled{opacity:.35}
 .menu button .odds{font-family:var(--mono);color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
 .menu button.sel{background:var(--accent)}
-.menu .dot{display:inline-block;width:10px;height:10px;margin-right:6px;border:1px solid var(--ink)}
+.menu .dot{display:inline-block;width:9px;height:9px;margin-right:5px;border:1px solid var(--ink)}
+.dot{display:inline-block;width:9px;height:9px;border:1px solid var(--ink)}
 .dot.w1{background:var(--w1)} .dot.w2{background:var(--w2)}
 
 /* конфиг серии */
-.series-cfg{display:none;align-items:center;gap:10px;background:var(--bg-canvas-warm);border:2px dashed rgba(10,10,11,.35);padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.series-cfg{display:none;align-items:center;gap:8px;background:var(--bg-canvas-warm);border:2px dashed rgba(10,10,11,.35);padding:6px 10px;margin-bottom:9px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .series-cfg.show{display:flex;flex-wrap:wrap}
 .series-cfg .len{display:flex;gap:4px}
-.series-cfg .len button{width:34px;height:30px;border:2px solid var(--ink);background:#fff;font-weight:700;font-size:14px}
+.series-cfg .len button{width:30px;height:27px;border:2px solid var(--ink);background:#fff;font-weight:700;font-size:13px}
 .series-cfg .len button.sel{background:var(--ink);color:var(--accent)}
 .series-cfg .len button:disabled{opacity:.3}
 .series-rounds{font-family:var(--mono);color:var(--w1-deep)}
 .cab-w2 .series-rounds{color:var(--w2-deep)}
 
 /* действия */
-.actions{display:grid;grid-template-columns:1fr 92px;gap:10px;margin-bottom:6px}
-.play{font-family:var(--head);font-size:22px;letter-spacing:.14em;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:12px;transition:transform .08s}
+.actions{display:grid;grid-template-columns:1fr 76px;gap:8px;margin-bottom:5px}
+.play{font-family:var(--head);font-size:18px;letter-spacing:.12em;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:10px;transition:transform .08s}
 .play:hover:not(:disabled){background:var(--accent-deep)}
 .play:active:not(:disabled){transform:translateY(2px);box-shadow:var(--shadow-press)}
 .play:disabled{background:#cfc8b8;color:#7d776a}
-.auto{font-family:var(--head);font-size:13px;letter-spacing:.1em;border:2px solid var(--ink);box-shadow:var(--shadow-flat);background:#fff;color:var(--ink);padding:6px 4px;line-height:1.2}
-.auto .st{display:block;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.auto{font-family:var(--head);font-size:12px;letter-spacing:.08em;border:2px solid var(--ink);box-shadow:var(--shadow-flat);background:#fff;color:var(--ink);padding:5px 3px;line-height:1.2}
+.auto .st{display:block;font-family:var(--mono);font-size:9px;color:var(--muted)}
 .auto.on{background:var(--positive);color:#fff} .auto.on .st{color:#bfe8cd}
 .auto:disabled{opacity:.45}
-.limit-note{font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.limit-note{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:9px}
 .limit-note b{color:var(--ink)}
 .flash{color:var(--negative)!important;font-weight:700}
 
 /* активная серия */
-.active-series{display:none;align-items:center;gap:10px;background:var(--ink);color:var(--on-dark);padding:8px 12px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.active-series{display:none;align-items:center;gap:8px;background:var(--ink);color:var(--on-dark);padding:6px 10px;margin-bottom:9px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .active-series.show{display:flex;flex-wrap:wrap}
-.active-series .pips{display:flex;gap:4px}
-.active-series .pip{width:14px;height:14px;border:1px solid var(--on-dark);background:transparent}
+.active-series .pips{display:flex;gap:3px}
+.active-series .pip{width:12px;height:12px;border:1px solid var(--on-dark);background:transparent}
 .active-series .pip.hit{background:var(--accent)}
 .active-series .wait{color:var(--accent)}
 
 /* мои ставки */
-.mybets h4{font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;border-top:2px dashed rgba(10,10,11,.3);padding-top:10px;margin-bottom:6px}
-.mybets ul{list-style:none;max-height:132px;overflow-y:auto}
-.mybets li{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;padding:4px 6px;border-left:4px solid var(--muted);margin-bottom:3px;background:rgba(255,255,255,.55)}
-.mybets li .lbl .dot{width:8px;height:8px}
-.mybets li .pay{font-family:var(--mono)}
+.mybets h4{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;border-top:2px dashed rgba(10,10,11,.3);padding-top:8px;margin-bottom:5px}
+.mybets ul{list-style:none;max-height:104px;overflow-y:auto}
+.mybets li{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;padding:3px 6px;border-left:4px solid var(--muted);margin-bottom:3px;background:rgba(255,255,255,.55)}
+.mybets li .pay{font-family:var(--mono);white-space:nowrap}
 .mybets li.pending{border-left-color:var(--accent-deep)}
 .mybets li.won{border-left-color:var(--positive);color:var(--positive)}
 .mybets li.lost{border-left-color:var(--negative);color:var(--negative);opacity:.75;text-decoration:line-through}
-.mybets .empty{font-size:12px;color:var(--muted);letter-spacing:.08em;padding:4px 6px}
+.mybets .empty{font-size:11px;color:var(--muted);letter-spacing:.08em;padding:3px 6px}
 
-/* ════════ Дев-панель ════════ */
-.devbar{display:flex;gap:6px;align-items:center;margin-top:14px;font-size:11px;color:var(--muted)}
-.devbar button{background:#fff;border:1px solid #555;color:#111;font-size:11px;padding:3px 8px}
+/* ── Подвал ── */
+.foot{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:#000;padding:10px 26px}
+.score{font-family:var(--head);letter-spacing:.08em}
+.score .lbl{font-size:11px;color:var(--muted);letter-spacing:.22em;margin-bottom:2px}
+.score .wl{font-size:26px;color:#fff}
+.score .w.b{color:var(--w1)} .score .w.r{color:var(--negative-bright)}
+.score.right{text-align:right}
+.fcenter{text-align:center}
+.fcenter .lbl{font-size:11px;color:var(--muted);font-family:var(--head);letter-spacing:.22em;margin-bottom:4px}
+.hist{display:inline-flex;gap:4px;vertical-align:middle;margin-left:8px}
+.hist i{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--head);font-size:11px;color:#fff}
+.hist i.w1{background:var(--w1)} .hist i.w2{background:var(--w2)}
+.kassa{font-family:var(--head);font-size:13px;letter-spacing:.14em;color:var(--muted);margin-top:5px}
+.kassa b{color:var(--accent)}
+
+/* ── Дев-панель ── */
+.devbar{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:10px;color:#6a6a6e}
+.devbar button{background:#fff;border:1px solid #555;color:#111;font-size:10px;padding:2px 7px}
 .devbar button.sel{background:var(--negative);color:#fff}
-.footnote{margin-top:8px;font-size:11px;color:#6a6a6e;letter-spacing:.06em}
+.devbar .vtag{margin-left:auto}
 </style>
 </head>
 <body>
 
-<div class="stage">
-  <div class="phasebar">
-    <span class="round" id="hRound">РАУНД №3</span>
-    <span class="phase" id="hPhase">ПРИЕМ СТАВОК</span>
-    <span class="clock" id="hClock">0:20</span>
+<div class="app">
+  <!-- Шапка -->
+  <div class="top">
+    <div class="fighter f-w1"><span class="corner">СИНИЙ УГОЛ</span>
+      <span class="ava">🥊</span><span class="fname">СЕНТИПЕДА</span></div>
+    <div class="timerbox">
+      <span class="ph" id="hPh">ПРИЕМ СТАВОК</span>
+      <span class="big" id="hBig">20</span>
+      <span class="bar"><i id="hProg" style="width:100%"></i></span>
+    </div>
+    <div class="fighter f-w2"><span class="corner">КРАСНЫЙ УГОЛ</span>
+      <span class="ava">🥊</span><span class="fname">БОБЕР</span></div>
   </div>
-  <div class="progress"><i id="hProg" style="width:100%"></i></div>
 
-  <div class="cabinets" id="cabs"></div>
+  <!-- Видео + панель ставок -->
+  <div class="mid">
+    <div class="cam c-w1">КАМЕРА ИЛИ МИКРОФОН НЕДОСТУПНЫ</div>
+    <div class="panel">
+      <div class="panel-title" id="pTitle">РАУНД №3 · <span class="phw">ПРИЕМ СТАВОК</span></div>
+      <div class="cabinets" id="cabs"></div>
+    </div>
+    <div class="cam c-w2">КАМЕРА ИЛИ МИКРОФОН НЕДОСТУПНЫ</div>
+  </div>
+
+  <!-- Подвал -->
+  <div class="foot">
+    <div class="score"><div class="lbl">СИНИЙ • СЕНТИПЕДА</div>
+      <div class="wl"><span class="w b">W</span><span id="sW1">0</span> • L<span id="sL1">0</span></div></div>
+    <div class="fcenter">
+      <div class="lbl">ИСТОРИЯ РАУНДОВ <span class="hist" id="hist"></span></div>
+      <div class="kassa">КАССА СЕГОДНЯ / <b>+$75 029</b></div>
+    </div>
+    <div class="score right"><div class="lbl">КРАСНЫЙ • БОБЕР</div>
+      <div class="wl"><span class="w r">W</span><span id="sW2">0</span> • L<span id="sL2">0</span></div></div>
+  </div>
 </div>
 
 <div class="devbar">
@@ -133,8 +192,8 @@ button:disabled{cursor:not-allowed}
   <button data-t="10">10 сек</button>
   <button data-t="20" class="sel">20 сек</button>
   <button data-t="99999">∞</button>
+  <span class="vtag">bet-cabinet v0.3.1 · симуляция исходов 50/50 · фикстура ?state=series</span>
 </div>
-<div class="footnote">bet-cabinet v0.3 - интерактивная спека для фронта. Исходы раундов в симуляции случайные 50/50.</div>
 
 <script>
 /* ════════════════ КОНСТАНТЫ (источник: Требования v3, раздел 1.6.1) ════════════════ */
@@ -143,20 +202,19 @@ button:disabled{cursor:not-allowed}
    серия 4 - 13.60 (15.07%), серия 5 - 26.09 (18.46%). */
 const ROUND_ODDS = 1.90;                                  // = серия 1, отдельным маркетом
 const SERIES_ODDS = {2:3.69, 3:7.08, 4:13.60, 5:26.09};   // N побед ПОДРЯД, фикс. таблица
-const STAKES = [1,3,5,10,15,20,50,100];                    // номиналы USD (решение 2026-06-10)
-const LIMIT = 0.10;                                        // лимит ставки: 10% от баланса
+const STAKES = [1,3,5,10,15,20,50,100];                   // номиналы USD (решение 2026-06-10)
+const LIMIT = 0.10;                                       // лимит ставки: 10% от баланса
 const TOTAL_ROUNDS = 54;
 const SIDES = {w1:{label:'СИНИЙ', name:'СЕНТИПЕДА'}, w2:{label:'КРАСНЫЙ', name:'БОБЕР'}};
 
 /* ════════════════ СОСТОЯНИЕ ════════════════ */
-const G = { round:3, phase:'BETTING', tLeft:20, tTotal:20, betTime:20 };
+const G = { round:3, phase:'BETTING', tLeft:20, tTotal:20, betTime:20, history:[] };
 const P = {};
 for (const k of ['w1','w2']) P[k] = {
   balance:1000, stake:10,
   sel:{type:'round', side:k},   // дефолт: ставка на себя, исход раунда
   seriesLen:2, auto:false, bets:[]
 };
-P.w2.stake = 10;
 
 const $ = s => document.querySelector(s);
 const fmt$ = n => '$' + n.toLocaleString('en-US');
@@ -168,9 +226,8 @@ function cabinetHTML(who){
   const s = SIDES[who];
   return `<div class="cabinet cab-${who}" data-who="${who}">
     <div class="cab-head">
-      <div><span class="corner">${s.label} УГОЛ</span>
-        <div class="cab-name">${s.name}</div></div>
-      <div class="balance" id="bal-${who}"><small>БАЛАНС</small>${fmt$(1000)}</div>
+      <span class="cab-name">${s.name}</span>
+      <span class="balance" id="bal-${who}"><small>БАЛАНС</small>${fmt$(1000)}</span>
     </div>
     <div class="ctrl-row">
       <div class="picker">
@@ -212,7 +269,7 @@ function renderCab(who){
   $('#stakeBtn-'+who).innerHTML = `<span>${fmt$(p.stake)}</span><span class="caret">▼</span>`;
   $('#stakeMenu-'+who).innerHTML = STAKES.map(s=>
     `<button data-stake="${s}" ${s>mx?'disabled':''} class="${s===p.stake?'sel':''}">
-      <span>${fmt$(s)}</span>${s>mx?'<span style="font-size:10px">>10%</span>':''}</button>`).join('');
+      <span>${fmt$(s)}</span>${s>mx?'<span style="font-size:9px">>10%</span>':''}</button>`).join('');
 
   // исход
   const sel = p.sel, odds = oddsFor(sel, p.seriesLen);
@@ -229,10 +286,10 @@ function renderCab(who){
     {t:'round',s:'w2',h:sideTxt('w2'),o:ROUND_ODDS},
     {t:'series',s:'w1',h:serTxt('w1'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
     {t:'series',s:'w2',h:serTxt('w2'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
-  ].map((m,i)=>`<button data-out="${m.t}:${m.s}" ${m.d?'disabled':''}
+  ].map(m=>`<button data-out="${m.t}:${m.s}" ${m.d?'disabled':''}
       class="${sel.type===m.t&&sel.side===m.s?'sel':''}">
       <span>${m.h}</span><span class="odds">×${m.o.toFixed(2)}</span></button>`).join('')
-    + (hasSeries ? '<button disabled><span style="font-size:11px;text-transform:none">серия уже активна - одна за раз</span></button>' : '');
+    + (hasSeries ? '<button disabled><span style="font-size:10px;text-transform:none">серия уже активна - одна за раз</span></button>' : '');
 
   // конфиг серии: старт всегда = текущий раунд, видна только длина
   const cfg = $('#seriesCfg-'+who);
@@ -279,23 +336,30 @@ function renderCab(who){
   const ul = $('#bets-'+who);
   ul.innerHTML = p.bets.length ? p.bets.slice(-8).reverse().map(b=>{
     const lbl = b.type==='round'
-      ? `<span class="dot ${b.side}"></span>Р${b.round} · ${b.side==='w1'?'СИН':'КРС'}`
-      : `<span class="dot ${b.side}"></span>СЕРИЯ ${b.from}-${b.to} · ${b.side==='w1'?'СИН':'КРС'}${b.status==='pending'?` · ${b.wins}/${b.to-b.from+1}`:''}`;
+      ? `<span class="dot ${b.side}"></span> Р${b.round} · ${b.side==='w1'?'СИН':'КРС'}`
+      : `<span class="dot ${b.side}"></span> СЕРИЯ ${b.from}-${b.to} · ${b.side==='w1'?'СИН':'КРС'}${b.status==='pending'?` · ${b.wins}/${b.to-b.from+1}`:''}`;
     const pay = b.status==='won' ? '+'+fmt$(b.payout)
               : b.status==='lost' ? '-'+fmt$(b.stake)
               : `${fmt$(b.stake)} ×${b.odds.toFixed(2)} → ${fmt$(Math.round(b.stake*b.odds))}`;
     return `<li class="${b.status}"><span class="lbl">${lbl}</span><span class="pay">${pay}</span></li>`;
   }).join('') : '<li class="empty">пока нет ставок</li>';
 }
+
 function renderTop(){
-  $('#hRound').textContent = 'РАУНД №' + G.round;
-  const ph = $('#hPhase');
+  const ph = $('#hPh');
   ph.textContent = {BETTING:'ПРИЕМ СТАВОК', SELECT:'ВЫБОР КАРТЫ', RESULT:'РЕЗУЛЬТАТ'}[G.phase];
   ph.classList.toggle('locked', G.phase!=='BETTING');
-  $('#hClock').textContent = '0:' + String(Math.max(0,Math.ceil(G.tLeft))).padStart(2,'0');
+  $('#hBig').textContent = Math.max(0, Math.ceil(G.tLeft));
   $('#hProg').style.width = (100*G.tLeft/G.tTotal) + '%';
+  $('#pTitle').innerHTML = `РАУНД №${G.round} · <span class="phw ${G.phase!=='BETTING'?'locked':''}">${ph.textContent}</span>`;
 }
-function renderAll(){ renderTop(); renderCab('w1'); renderCab('w2'); }
+function renderFoot(){
+  const w1 = G.history.filter(h=>h==='w1').length, w2 = G.history.length - w1;
+  $('#sW1').textContent = w1; $('#sL1').textContent = w2;
+  $('#sW2').textContent = w2; $('#sL2').textContent = w1;
+  $('#hist').innerHTML = G.history.slice(-10).map(h=>`<i class="${h}">${h==='w1'?'С':'К'}</i>`).join('');
+}
+function renderAll(){ renderTop(); renderFoot(); renderCab('w1'); renderCab('w2'); }
 
 /* ════════════════ СТАВКИ ════════════════ */
 function placeBet(who){
@@ -313,6 +377,7 @@ function placeBet(who){
   renderAll();
 }
 function settle(winner){
+  G.history.push(winner);
   for (const who of ['w1','w2']){
     const p = P[who];
     for (const b of p.bets){
@@ -378,6 +443,7 @@ if (location.search.includes('state=series')){
   P.w2.balance = 990;
   P.w2.bets.push({type:'series', side:'w2', from:2, to:4, stake:10, odds:7.08, status:'pending', wins:1});
   P.w2.bets.push({type:'round', side:'w1', round:2, stake:10, odds:1.90, status:'lost'});
+  G.history.push('w2');
 }
 renderAll();
 </script>
