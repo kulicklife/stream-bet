@@ -286,7 +286,7 @@ button:disabled{cursor:not-allowed}
       <div class="wl"><i class="sq b"></i><span id="sW1">0</span></div></div>
     <div class="fcenter">
       <div class="lbl">ИСТОРИЯ РАУНДОВ <span class="hist" id="hist"></span></div>
-      <div class="kassa">КАССА СЕГОДНЯ / <b>+$75,029</b></div>
+      <div class="kassa">КАССА СЕГОДНЯ / <b>+$3,842</b></div>
     </div>
     <div class="score right"><div class="lbl">КРАСНЫЙ • БОБЕР</div>
       <div class="wl"><span id="sW2">0</span><i class="sq r"></i></div></div>
@@ -491,7 +491,7 @@ function maskName(n){ return n[0] + '***' + n[n.length-1]; }
 function addWinner(){
   const nm = WIN_NAMES[Math.floor(Math.random()*WIN_NAMES.length)];
   const [mk, odds] = WIN_MARKETS[Math.floor(Math.random()*WIN_MARKETS.length)];
-  const stake = [5,10,20,50,100][Math.floor(Math.random()*5)];
+  const stake = [1,1,2,3,5,10,20][Math.floor(Math.random()*7)];
   tickerItems.push(`${maskName(nm)} <b>+${fmt$(Math.round(stake*odds))}</b> · ${mk}`);
   if (tickerItems.length > 12) tickerItems.shift();
 }
@@ -598,7 +598,7 @@ setInterval(()=>{
   else if (G.phase==='SELECT'){
     const f = G.duel.final;
     G.lastWinner = f.w1.v > f.w2.v ? 'w1' : 'w2';
-    G.bank = 1000*Math.floor(3+Math.random()*15) + 100*Math.floor(Math.random()*9);
+    G.bank = 10*Math.floor(4+Math.random()*25);   // банк раунда: аудитория ставит по $1-3
     settle(G.lastWinner);
     setPhase('RESULT',6);
   }
@@ -648,7 +648,7 @@ if (location.search.includes('phase=result')){
   G.duel = newDuel();
   const f = G.duel.final;
   G.lastWinner = f.w1.v > f.w2.v ? 'w1' : 'w2';
-  G.bank = 12400; G.history.push(G.lastWinner);
+  G.bank = 140; G.history.push(G.lastWinner);
   G.phase='RESULT'; G.tLeft=99; G.tTotal=99;
 }
 renderAll();

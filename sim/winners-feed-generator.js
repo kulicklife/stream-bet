@@ -151,10 +151,10 @@ var SimGen = (() => {
     return pool[clamp(idx, 0, n - 1)];
     void total;
   }
-  var STAKES_USD = [1, 2, 5, 10, 15, 20, 25, 50, 100, 200];
-  var STAKES_RUB = [50, 100, 200, 500, 1e3, 1500, 2e3, 5e3, 1e4];
-  var WHALE_USD = [500, 1e3, 2e3, 5e3];
-  var WHALE_RUB = [5e4, 1e5, 2e5, 5e5];
+  var STAKES_USD = [1, 2, 3, 5, 10, 15, 20];
+  var STAKES_RUB = [50, 100, 200, 300, 500, 1e3, 1500];
+  var WHALE_USD = [50, 100, 200];
+  var WHALE_RUB = [5e3, 1e4, 2e4];
   function snapStake(rng, raw, nominals) {
     let best = nominals[0];
     for (const n of nominals) if (Math.abs(n - raw) < Math.abs(best - raw)) best = n;
@@ -167,11 +167,11 @@ var SimGen = (() => {
   var M_EXPRESS = { tag: "\u042D\u041A\u0421\u041F\u0420\u0415\u0421\u0421", oddsLo: 5, oddsHi: 80 };
   function createSimulation(cfg) {
     const totalRounds = cfg.totalRounds ?? 54;
-    const peak = cfg.peakBetsPerRound ?? 120;
+    const peak = cfg.peakBetsPerRound ?? 35;
     const currency = cfg.currency ?? "USD";
     const stakes = currency === "USD" ? STAKES_USD : STAKES_RUB;
     const whaleStakes = currency === "USD" ? WHALE_USD : WHALE_RUB;
-    const medianStake = currency === "USD" ? 8 : 700;
+    const medianStake = currency === "USD" ? 1.3 : 110;
     const rng = mulberry32(cfg.seed ?? hashStr(cfg.sessionId + ":" + cfg.date));
     const { pool, whales } = buildNickPool(cfg.date, 400);
     let kassa = 0;
@@ -186,7 +186,7 @@ var SimGen = (() => {
       return a;
     }
     function sampleStake() {
-      return snapStake(rng, logNormal(rng, medianStake, 1.5), stakes);
+      return snapStake(rng, logNormal(rng, medianStake, 1.1), stakes);
     }
     function unround(x) {
       const v = Math.round(x);
@@ -226,10 +226,10 @@ var SimGen = (() => {
       history.push(ctx.winner);
       const noise = clamp(Math.exp(0.25 * gauss(rng)), 0.6, 1.6);
       const damp = lastRoundHadBigWin ? 0.85 : 1;
-      const betCount = Math.max(5, Math.round(audience(ctx.round) * peak * noise * damp));
+      const betCount = Math.max(3, Math.round(audience(ctx.round) * peak * noise * damp));
       const stakesArr = [];
       for (let i = 0; i < betCount; i++) stakesArr.push(sampleStake());
-      const whaleP = 0.02 + 0.13 * (ctx.round / totalRounds);
+      const whaleP = 0.02 + 0.1 * (ctx.round / totalRounds);
       let whaleCount = rng() < whaleP ? poisson(rng, 1.2) : 0;
       for (let i = 0; i < whaleCount; i++) stakesArr.push(pick(rng, whaleStakes));
       let bank = Math.round(stakesArr.reduce((a, b) => a + b, 0) / 10) * 10;
@@ -242,39 +242,33 @@ var SimGen = (() => {
       const h = history;
       const streakBroken = h.length >= 4 && h[h.length - 1] !== h[h.length - 2] && h[h.length - 2] === h[h.length - 3] && h[h.length - 3] === h[h.length - 4];
       const budget = bank * (streakBroken ? 0.65 + rng() * 0.27 : 0.55 + rng() * 0.37);
-      let winCount = clamp(Math.round(3 + betCount / 40), 3, 12);
-      if (streakBroken) winCount = Math.max(3, Math.round(winCount * 0.6));
+      let winCount = clamp(Math.round(2 + betCount / 8), 2, 8);
+      if (streakBroken) winCount = Math.max(2, Math.round(winCount * 0.6));
       const isHalfEnd = ctx.round === Math.floor(totalRounds / 2) || ctx.round === totalRounds;
       const seriesBoost = ctx.round % 2 === 0 ? 0.12 : 0;
-      const markets = [];
-      for (let i = 0; i < winCount; i++) {
-        const x = rng();
-        if (x < 0.78 - seriesBoost) markets.push(M_ROUND);
-        else if (x < 0.78 + seriesBoost) markets.push(M_SERIES(2 + Math.floor(rng() * 4)));
-        else markets.push(rng() < 0.5 ? M_TOTAL : M_FORA);
-      }
-      let bigWins = isHalfEnd ? 1 + Math.floor(rng() * 4) : rng() < 0.07 ? 1 : 0;
-      for (let i = 0; i < bigWins; i++) markets.push(rng() < 0.5 ? M_EXPRESS : M_SERIES(4 + Math.floor(rng() * 2)));
-      let raw = markets.map((m) => {
-        const isBig = m.tag === "\u042D\u041A\u0421\u041F\u0420\u0415\u0421\u0421" || m.oddsHi > 20;
-        const stake = isBig ? medianStake * (3 + rng() * 17) : sampleStake();
-        return { m, val: stake * odds(m) };
-      });
-      const rawSum = raw.reduce((a, b) => a + b.val, 0);
+      const shorts = [];
+      for (let i = 0; i < winCount; i++) shorts.push(rng() < 0.85 ? M_ROUND : M_FORA);
+      let raw = shorts.map((m) => ({ m, val: sampleStake() * odds(m) }));
+      const rawSum = raw.reduce((a, b) => a + b.val, 0) || 1;
       raw = raw.map((w) => ({ ...w, val: w.val / rawSum * budget }));
       raw = raw.map((w) => ({ ...w, val: Math.max(w.val, medianStake * (1.2 + rng() * 1.6)) }));
       const flooredSum = raw.reduce((a, b) => a + b.val, 0);
       if (flooredSum > bank * 0.95) raw = raw.map((w) => ({ ...w, val: w.val * (bank * 0.95) / flooredSum }));
-      if (ctx.round === totalRounds && raw.length) {
-        const top = raw.reduce((a, b) => a.val > b.val ? a : b);
-        top.val = Math.max(top.val, sessionMaxPayout * 1.15);
+      const ceiling = medianStake * 450;
+      const longs = [];
+      if (rng() < 0.25 + seriesBoost) longs.push(M_SERIES(2 + Math.floor(rng() * 4)));
+      const bigWins = isHalfEnd ? 1 + Math.floor(rng() * 3) : rng() < 0.06 ? 1 : 0;
+      for (let i = 0; i < bigWins; i++)
+        longs.push(rng() < 0.5 ? M_EXPRESS : rng() < 0.5 ? M_TOTAL : M_SERIES(4 + Math.floor(rng() * 2)));
+      const longRaw = longs.map((m) => {
+        const stake = Math.max(1, Math.round(medianStake * (1 + rng() * 5)));
+        return { m, val: clamp(stake * odds(m), medianStake * 8, ceiling) };
+      });
+      if (ctx.round === totalRounds && longRaw.length) {
+        const top = longRaw.reduce((a, b) => a.val > b.val ? a : b);
+        top.val = clamp(Math.max(top.val, sessionMaxPayout * 1.15), medianStake * 8, ceiling);
       }
-      const maxVal = Math.max(...raw.map((w) => w.val));
-      if (maxVal > bank * 0.4) {
-        bank = Math.round(maxVal / 0.4 / 10) * 10;
-        kassa += bank - activity.bank;
-        activity.bank = bank;
-      }
+      raw = raw.concat(longRaw);
       raw.sort((a, b) => a.val - b.val);
       const used = /* @__PURE__ */ new Map();
       let lastMask = "";

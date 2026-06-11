@@ -129,10 +129,13 @@ function zipfPick(rng: () => number, pool: string[], regulars: number): string {
 
 /* ─────────────────────────── номиналы/валюта ─────────────────────────── */
 
-const STAKES_USD = [1, 2, 5, 10, 15, 20, 25, 50, 100, 200] as const;
-const STAKES_RUB = [50, 100, 200, 500, 1000, 1500, 2000, 5000, 10000] as const;
-const WHALE_USD = [500, 1000, 2000, 5000] as const;
-const WHALE_RUB = [50000, 100000, 200000, 500000] as const;
+/* Калибровка на аудиторию RU-стримеров (~200к подписчиков, небогатый регион):
+   подавляющее большинство ставок $1-3, "разогретые" $10-20 - уже тяжелый порог,
+   кит этой аудитории - $50-200, а не $5000. */
+const STAKES_USD = [1, 2, 3, 5, 10, 15, 20] as const;
+const STAKES_RUB = [50, 100, 200, 300, 500, 1000, 1500] as const;
+const WHALE_USD = [50, 100, 200] as const;
+const WHALE_RUB = [5000, 10000, 20000] as const;
 
 function snapStake(rng: () => number, raw: number, nominals: readonly number[]): number {
   // ближайший человеческий номинал (с легким случайным сдвигом вверх/вниз)
@@ -154,11 +157,11 @@ const M_EXPRESS: Market = { tag: 'ЭКСПРЕСС', oddsLo: 5, oddsHi: 80 };
 
 export function createSimulation(cfg: SimConfig) {
   const totalRounds = cfg.totalRounds ?? 54;
-  const peak = cfg.peakBetsPerRound ?? 120;
+  const peak = cfg.peakBetsPerRound ?? 35;   // на пике эфира ~20-45 ставок за раунд
   const currency: Currency = cfg.currency ?? 'USD';
   const stakes = currency === 'USD' ? STAKES_USD : STAKES_RUB;
   const whaleStakes = currency === 'USD' ? WHALE_USD : WHALE_RUB;
-  const medianStake = currency === 'USD' ? 8 : 700;
+  const medianStake = currency === 'USD' ? 1.3 : 110;
 
   const rng = mulberry32(cfg.seed ?? hashStr(cfg.sessionId + ':' + cfg.date));
   const { pool, whales } = buildNickPool(cfg.date, 400);
@@ -179,7 +182,7 @@ export function createSimulation(cfg: SimConfig) {
   }
 
   function sampleStake(): number {
-    return snapStake(rng, logNormal(rng, medianStake, 1.5), stakes);
+    return snapStake(rng, logNormal(rng, medianStake, 1.1), stakes);
   }
 
   /** Некруглая выплата: круглые суммы подряд - палево. */
@@ -226,12 +229,12 @@ export function createSimulation(cfg: SimConfig) {
     /* ── объем ставок ── */
     const noise = clamp(Math.exp(0.25 * gauss(rng)), 0.6, 1.6);
     const damp = lastRoundHadBigWin ? 0.85 : 1;                  // пул "выдохся" после крупняка
-    const betCount = Math.max(5, Math.round(audience(ctx.round) * peak * noise * damp));
+    const betCount = Math.max(3, Math.round(audience(ctx.round) * peak * noise * damp));
 
     /* ── банк = сумма реально насэмпленных ставок ── */
     const stakesArr: number[] = [];
     for (let i = 0; i < betCount; i++) stakesArr.push(sampleStake());
-    const whaleP = 0.02 + 0.13 * (ctx.round / totalRounds);      // киты: чаще к концу
+    const whaleP = 0.02 + 0.10 * (ctx.round / totalRounds);     // киты: редко, чаще к концу
     let whaleCount = rng() < whaleP ? poisson(rng, 1.2) : 0;     // иногда 0, иногда 5
     for (let i = 0; i < whaleCount; i++) stakesArr.push(pick(rng, whaleStakes));
     let bank = Math.round(stakesArr.reduce((a, b) => a + b, 0) / 10) * 10;
@@ -249,49 +252,44 @@ export function createSimulation(cfg: SimConfig) {
     const budget = bank * (streakBroken ? 0.65 + rng() * 0.27 : 0.55 + rng() * 0.37);
 
     /* ── сколько победителей показываем ── */
-    let winCount = clamp(Math.round(3 + betCount / 40), 3, 12);
-    if (streakBroken) winCount = Math.max(3, Math.round(winCount * 0.6));
+    let winCount = clamp(Math.round(2 + betCount / 8), 2, 8);
+    if (streakBroken) winCount = Math.max(2, Math.round(winCount * 0.6));
 
-    /* ── микс маркетов по позиции раунда ── */
+    /* ── маркеты: короткие живут в банке раунда, длинные - нет ── */
     const isHalfEnd = ctx.round === Math.floor(totalRounds / 2) || ctx.round === totalRounds;
     const seriesBoost = ctx.round % 2 === 0 ? 0.12 : 0;          // закрытия коротких серий
-    const markets: Market[] = [];
-    for (let i = 0; i < winCount; i++) {
-      const x = rng();
-      if (x < 0.78 - seriesBoost) markets.push(M_ROUND);
-      else if (x < 0.78 + seriesBoost) markets.push(M_SERIES(2 + Math.floor(rng() * 4)));
-      else markets.push(rng() < 0.5 ? M_TOTAL : M_FORA);
-    }
-    /* конец тайма/матча: 1-4 крупных расчета длинных маркетов */
-    let bigWins = isHalfEnd ? 1 + Math.floor(rng() * 4) : (rng() < 0.07 ? 1 : 0);
-    for (let i = 0; i < bigWins; i++) markets.push(rng() < 0.5 ? M_EXPRESS : M_SERIES(4 + Math.floor(rng() * 2)));
 
-    /* ── выплаты: сэмплим, масштабируем в бюджет, ограничиваем пик ── */
-    let raw = markets.map(m => {
-      const isBig = m.tag === 'ЭКСПРЕСС' || m.oddsHi > 20;
-      const stake = isBig ? medianStake * (3 + rng() * 17) : sampleStake();
-      return { m, val: stake * odds(m) };
-    });
-    const rawSum = raw.reduce((a, b) => a + b.val, 0);
+    /* короткие (РАУНД/ФОРА): расчет внутри раунда, сумма выплат <= бюджета банка */
+    const shorts: Market[] = [];
+    for (let i = 0; i < winCount; i++) shorts.push(rng() < 0.85 ? M_ROUND : M_FORA);
+    let raw = shorts.map(m => ({ m, val: sampleStake() * odds(m) }));
+    const rawSum = raw.reduce((a, b) => a + b.val, 0) || 1;
     raw = raw.map(w => ({ ...w, val: (w.val / rawSum) * budget }));
-    /* пол выплаты: "победитель +$2" в ленте - мусор. Пол с джиттером,
-       иначе одинаковые минимумы сами становятся паттерном */
+    /* пол выплаты с джиттером: одинаковые минимумы сами становятся паттерном */
     raw = raw.map(w => ({ ...w, val: Math.max(w.val, medianStake * (1.2 + rng() * 1.6)) }));
     const flooredSum = raw.reduce((a, b) => a + b.val, 0);
     if (flooredSum > bank * 0.95) raw = raw.map(w => ({ ...w, val: w.val * (bank * 0.95) / flooredSum }));
 
-    /* хедлайнер последнего раунда: крупнейшая выплата сессии */
-    if (ctx.round === totalRounds && raw.length) {
-      const top = raw.reduce((a, b) => (a.val > b.val ? a : b));
-      top.val = Math.max(top.val, sessionMaxPayout * 1.15);
+    /* длинные (СЕРИЯ/ТОТАЛ/ЭКСПРЕСС): ставки сделаны в ПРОШЛЫХ раундах,
+       поэтому выплата не обязана помещаться в банк текущего раунда.
+       Потолок правдоподобия: аудитория ставит $1-5 на длинные кэфы. */
+    const ceiling = medianStake * 450;                            // ~$580 / ~50к ₽
+    const longs: Market[] = [];
+    if (rng() < 0.25 + seriesBoost) longs.push(M_SERIES(2 + Math.floor(rng() * 4)));
+    const bigWins = isHalfEnd ? 1 + Math.floor(rng() * 3) : (rng() < 0.06 ? 1 : 0);
+    for (let i = 0; i < bigWins; i++)
+      longs.push(rng() < 0.5 ? M_EXPRESS : (rng() < 0.5 ? M_TOTAL : M_SERIES(4 + Math.floor(rng() * 2))));
+    const longRaw = longs.map(m => {
+      const stake = Math.max(1, Math.round(medianStake * (1 + rng() * 5)));
+      return { m, val: clamp(stake * odds(m), medianStake * 8, ceiling) };
+    });
+
+    /* хедлайнер последнего раунда: крупнейший залет сессии (в пределах потолка) */
+    if (ctx.round === totalRounds && longRaw.length) {
+      const top = longRaw.reduce((a, b) => (a.val > b.val ? a : b));
+      top.val = clamp(Math.max(top.val, sessionMaxPayout * 1.15), medianStake * 8, ceiling);
     }
-    /* один выигрыш не больше 40% банка: иначе поднимаем банк, не режем выплату */
-    const maxVal = Math.max(...raw.map(w => w.val));
-    if (maxVal > bank * 0.4) {
-      bank = Math.round((maxVal / 0.4) / 10) * 10;
-      kassa += bank - activity.bank;
-      activity.bank = bank;
-    }
+    raw = raw.concat(longRaw);
 
     /* ── сборка событий: по возрастанию, крупные в конце (драматургия) ── */
     raw.sort((a, b) => a.val - b.val);

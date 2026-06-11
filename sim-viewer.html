@@ -39,7 +39,7 @@ h1{font-family:var(--head);color:var(--canvas);font-size:24px;letter-spacing:.06
 <div class="controls">
   <label>SEED (вариант дня)<input id="seed" type="number" value="42"></label>
   <label>ВАЛЮТА<select id="cur"><option>USD</option><option>RUB</option></select></label>
-  <label>ПИК СТАВОК/РАУНД<input id="peak" type="number" value="120"></label>
+  <label>ПИК СТАВОК/РАУНД<input id="peak" type="number" value="35"></label>
   <button id="go">СГЕНЕРИРОВАТЬ</button>
 </div>
 <p class="hint">Это прогон того самого модуля, который пойдет на бэкенд (sim/winners-feed-generator.ts,
@@ -56,7 +56,7 @@ const fmt = (n,c) => (c==='USD'?'$':'') + n.toLocaleString('en-US') + (c==='RUB'
 function run(){
   const seed = +$('#seed').value || 1;
   const cur = $('#cur').value;
-  const peak = +$('#peak').value || 120;
+  const peak = +$('#peak').value || 35;
   const sim = SimGen.createSimulation({ sessionId:'viewer', date:'2026-06-11', seed, currency:cur, peakBetsPerRound:peak });
   const rngSide = (()=>{ let x=seed*2654435761>>>0; return ()=>{ x^=x<<13;x^=x>>>17;x^=x<<5;x>>>=0; return x/4294967296; };})();
 

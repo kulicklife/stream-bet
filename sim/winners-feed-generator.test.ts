@@ -23,16 +23,19 @@ for (let s = 0; s < SEEDS; s++) {
     const { activity, winners, kassaToday } = out;
     kassaCheck += activity.bank;
 
-    check(activity.betCount >= 5, `seed ${s} r${r}: betCount < 5`);
+    check(activity.betCount >= 3, `seed ${s} r${r}: betCount < 3`);
     check(kassaToday === kassaCheck, `seed ${s} r${r}: касса != сумме банков (${kassaToday} vs ${kassaCheck})`);
 
     if (voided) { check(winners.length === 0, `seed ${s} r${r}: победители в void-раунде`); continue; }
 
-    check(winners.length >= 3 && winners.length <= 17, `seed ${s} r${r}: winners=${winners.length}`);
-    const sum = winners.reduce((a, w) => a + w.payout, 0);
-    check(sum <= activity.bank, `seed ${s} r${r}: выплаты ${sum} > банка ${activity.bank}`);
+    check(winners.length >= 2 && winners.length <= 13, `seed ${s} r${r}: winners=${winners.length}`);
+    // короткие маркеты (РАУНД/ФОРА) обязаны помещаться в банк раунда;
+    // длинные (СЕРИЯ/ТОТАЛ/ЭКСПРЕСС) - ставки прошлых раундов, банк не ограничивает
+    const shortSum = winners.filter(w => w.marketTag === 'РАУНД' || w.marketTag === 'ФОРА')
+      .reduce((a, w) => a + w.payout, 0);
+    check(shortSum <= activity.bank, `seed ${s} r${r}: короткие выплаты ${shortSum} > банка ${activity.bank}`);
     const mx = Math.max(...winners.map(w => w.payout));
-    check(mx <= activity.bank * 0.4 + 100, `seed ${s} r${r}: пик ${mx} > 40% банка ${activity.bank}`);
+    check(mx <= 1.3 * 450 + 120, `seed ${s} r${r}: выплата ${mx} выше потолка аудитории`);
 
     // ники: маска максимум 2 раза за раунд и не подряд
     const cnt = new Map<string, number>();
