@@ -215,7 +215,7 @@ export function createSimulation(cfg: SimConfig) {
       const m = rng() < 0.6 ? M_ROUND : rng() < 0.5 ? M_TOTAL : M_FORA;
       const mask = pickNick(used, last, false);
       last = mask;
-      out.push({ round: 0, nickMasked: mask, payout: unround(Math.max(sampleStake() * odds(m), medianStake * 1.4)), marketTag: m.tag, delayMs: i * 1200 });
+      out.push({ round: 0, nickMasked: mask, payout: unround(Math.max(sampleStake() * odds(m), medianStake * (1.2 + rng() * 1.6))), marketTag: m.tag, delayMs: i * 1200 });
     }
     return out;
   }
@@ -274,9 +274,9 @@ export function createSimulation(cfg: SimConfig) {
     });
     const rawSum = raw.reduce((a, b) => a + b.val, 0);
     raw = raw.map(w => ({ ...w, val: (w.val / rawSum) * budget }));
-    /* пол выплаты: "победитель +$2" в ленте - мусор, не показываем мелочь */
-    const floor = medianStake * 1.4;
-    raw = raw.map(w => ({ ...w, val: Math.max(w.val, floor) }));
+    /* пол выплаты: "победитель +$2" в ленте - мусор. Пол с джиттером,
+       иначе одинаковые минимумы сами становятся паттерном */
+    raw = raw.map(w => ({ ...w, val: Math.max(w.val, medianStake * (1.2 + rng() * 1.6)) }));
     const flooredSum = raw.reduce((a, b) => a + b.val, 0);
     if (flooredSum > bank * 0.95) raw = raw.map(w => ({ ...w, val: w.val * (bank * 0.95) / flooredSum }));
 

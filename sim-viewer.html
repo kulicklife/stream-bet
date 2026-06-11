@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream Bet - просмотр симуляции ленты победителей</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0A0B;--canvas:#F0EAD9;--ink:#0A0A0B;--muted:#9A9088;--accent:#FFC83D;
+--w1:#0050C8;--w2:#D7152E;--line:rgba(10,10,11,.25);
+--head:'Anton',Impact,sans-serif;--ui:'Roboto Condensed',sans-serif;--mono:'Roboto Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--ui);color:var(--ink);padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+h1{font-family:var(--head);color:var(--canvas);font-size:24px;letter-spacing:.06em}
+.controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap;background:var(--canvas);padding:14px 18px;border-radius:2px}
+.controls label{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.controls input,.controls select{font-family:var(--mono);font-size:15px;font-weight:700;padding:7px 10px;border:1px solid var(--line);background:#fff;width:110px}
+.controls button{font-family:var(--head);font-size:15px;letter-spacing:.1em;background:var(--accent);border:2px solid var(--ink);padding:9px 22px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.45)}
+.controls button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.hint{color:#7d7a72;font-size:12px;max-width:760px;text-align:center;line-height:1.5}
+.out{width:min(860px,100%);background:var(--canvas);padding:18px 22px;border-radius:2px}
+.block{margin-bottom:16px}
+.bh{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-bottom:7px;flex-wrap:wrap}
+.bh .rt{font-family:var(--head);font-size:17px;letter-spacing:.05em}
+.bh .meta{font-family:var(--mono);font-size:12px;color:#55503F}
+.bh .meta b{color:var(--ink)}
+.bh .half{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;background:var(--ink);padding:3px 8px}
+.wrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;padding:3px 2px;border-bottom:1px solid rgba(10,10,11,.1)}
+.wrow .n{color:#55503F}.wrow .n i{font-style:normal;color:var(--muted);font-family:var(--mono);font-size:11px;margin-right:8px}
+.wrow .p{font-family:var(--mono)}
+.wrow.big .p{color:#9a6a00}
+.wrow .m{color:var(--muted);font-size:11px;letter-spacing:.08em;min-width:80px;text-align:right}
+.pm .rt{color:#55503F}
+.empty{color:var(--muted);font-size:12px;padding:4px 0}
+</style>
+</head>
+<body>
+<h1>СИМУЛЯЦИЯ ЛЕНТЫ ПОБЕДИТЕЛЕЙ</h1>
+<div class="controls">
+  <label>SEED (вариант дня)<input id="seed" type="number" value="42"></label>
+  <label>ВАЛЮТА<select id="cur"><option>USD</option><option>RUB</option></select></label>
+  <label>ПИК СТАВОК/РАУНД<input id="peak" type="number" value="120"></label>
+  <button id="go">СГЕНЕРИРОВАТЬ</button>
+</div>
+<p class="hint">Это прогон того самого модуля, который пойдет на бэкенд (sim/winners-feed-generator.ts,
+здесь он скомпилирован в JS). Один seed - одна «сессия дня»: меняй seed и смотри, как меняются объемы,
+киты, крупные расчеты в конце четных раундов и таймов (27, 54). Исходы раундов кидаются монеткой.
+«+Ns» у победителя - задержка появления в тикере после результата раунда.</p>
+<div class="out" id="out"></div>
+
+<script src="sim/winners-feed-generator.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const fmt = (n,c) => (c==='USD'?'$':'') + n.toLocaleString('en-US') + (c==='RUB'?' ₽':'');
+
+function run(){
+  const seed = +$('#seed').value || 1;
+  const cur = $('#cur').value;
+  const peak = +$('#peak').value || 120;
+  const sim = SimGen.createSimulation({ sessionId:'viewer', date:'2026-06-11', seed, currency:cur, peakBetsPerRound:peak });
+  const rngSide = (()=>{ let x=seed*2654435761>>>0; return ()=>{ x^=x<<13;x^=x>>>17;x^=x<<5;x>>>=0; return x/4294967296; };})();
+
+  let html = '';
+  const pm = sim.prematch();
+  html += `<div class="block pm"><div class="bh"><span class="rt">ПРЕМАТЧ</span><span class="meta">холодный старт тикера, до первого раунда</span></div>`;
+  html += pm.map(w=>row(w,cur)).join('') + '</div>';
+
+  let side='w1';
+  for (let r=1;r<=54;r++){
+    if (rngSide()<0.5) side = side==='w1'?'w2':'w1';
+    const {activity,winners,kassaToday} = sim.generateRound({round:r,winner:side});
+    const tag = r===27||r===54 ? '<span class="half">КОНЕЦ ТАЙМА</span>' : '';
+    html += `<div class="block"><div class="bh"><span class="rt">РАУНД ${r}</span>
+      <span class="meta">ставок <b>${activity.betCount}</b> · банк <b>${fmt(activity.bank,cur)}</b> · касса <b>${fmt(kassaToday,cur)}</b></span>${tag}</div>`;
+    html += winners.length ? winners.map(w=>row(w,cur)).join('') : '<div class="empty">раунд void - победителей нет</div>';
+    html += '</div>';
+  }
+  $('#out').innerHTML = html;
+}
+function row(w,cur){
+  const big = w.payout > (cur==='USD'?500:45000);
+  return `<div class="wrow ${big?'big':''}"><span class="n"><i>+${Math.round(w.delayMs/1000)}s</i>${w.nickMasked}</span>
+    <span class="p">+${fmt(w.payout,cur)}</span><span class="m">${w.marketTag}</span></div>`;
+}
+$('#go').onclick = run;
+run();
+</script>
+</body>
+</html>
