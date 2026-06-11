@@ -3,23 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stream Bet - Кабинет ставок блогера v0.3.1 (полная компоновка)</title>
+<title>Stream Bet - Кабинет ставок блогера v0.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* ════════ Токены (boxing-bout, совместимы с demo-v0.2.2) ════════ */
+/* ════════ Токены (boxing-bout, дисциплинированная палитра) ════════
+   Цветовой бюджет: синий/красный = только идентичность углов;
+   золото = только главное действие (СТАВКА); красный на черном = таймер.
+   Все остальное - чернила по крему, волосяные линии. */
 :root{
   --bg-app:#0A0A0B; --bg-canvas:#F0EAD9; --bg-canvas-warm:#E8E1D2;
   --w1:#0050C8; --w1-deep:#003DA5; --w2:#D7152E; --w2-deep:#C8102E;
-  --accent:#FFC83D; --accent-deep:#FFB81C; --trophy:#E5B448;
+  --accent:#FFC83D; --accent-deep:#FFB81C;
   --positive:#007030; --negative:#B83A2A; --negative-bright:#E81E2A;
-  --ink:#0A0A0B; --on-dark:#F0EAD9; --muted:#9A9088;
+  --ink:#0A0A0B; --ink-soft:#55503F; --on-dark:#F0EAD9; --muted:#9A9088;
+  --line:rgba(10,10,11,.28); --line-soft:rgba(10,10,11,.14);
   --head:'Anton',Impact,sans-serif; --ui:'Roboto Condensed',sans-serif; --mono:'Roboto Mono',monospace;
-  --shadow-flat:0 3px 0 rgba(0,0,0,.45); --shadow-press:0 1px 0 rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:var(--bg-app);color:var(--on-dark);font-family:var(--ui);display:flex;flex-direction:column;padding:10px 12px 6px}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:disabled{cursor:not-allowed}
 
 /* ════════ Компоновка игры ════════ */
@@ -27,129 +30,127 @@ button:disabled{cursor:not-allowed}
 
 /* ── Шапка: угол - таймер - угол ── */
 .top{display:grid;grid-template-columns:1fr 380px 1fr;gap:10px}
-.fighter{display:flex;align-items:center;gap:14px;background:var(--bg-canvas);color:var(--ink);padding:10px 16px;position:relative;border:2px solid var(--ink);min-width:0}
-.fighter.f-w1{box-shadow:0 0 0 3px var(--w1)}
-.fighter.f-w2{box-shadow:0 0 0 3px var(--w2);flex-direction:row-reverse}
-.fighter .bal{margin-left:auto;text-align:right;font-family:var(--mono);font-size:24px;font-weight:700;white-space:nowrap}
+.fighter{display:flex;align-items:center;gap:16px;background:var(--bg-canvas);color:var(--ink);padding:12px 18px;position:relative;border:3px solid var(--w1);min-width:0}
+.fighter.f-w2{border-color:var(--w2);flex-direction:row-reverse}
+.fighter .ava{width:54px;height:54px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px}
+.fighter .fname{font-family:var(--head);font-size:34px;letter-spacing:.03em;text-transform:uppercase}
+.fighter .bal{margin-left:auto;text-align:right;font-family:var(--mono);font-size:23px;font-weight:700;white-space:nowrap}
 .f-w2 .bal{margin-left:0;margin-right:auto;text-align:left}
 .fighter .bal small{font-size:9px;font-weight:400;letter-spacing:.16em;color:var(--muted);display:block}
 .fighter .bal.bump{animation:bump .5s}
-.fighter .ava{width:56px;height:56px;border:2px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px}
-.fighter .fname{font-family:var(--head);font-size:34px;letter-spacing:.04em;text-transform:uppercase}
-.corner{position:absolute;top:-8px;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 10px}
+.corner{position:absolute;top:-9px;font-size:10px;font-weight:700;letter-spacing:.18em;color:#fff;padding:3px 10px}
 .f-w1 .corner{left:10px;background:var(--w1);transform:rotate(-2deg)}
 .f-w2 .corner{right:10px;background:var(--w2);transform:rotate(2deg)}
-.timerbox{background:#000;border:2px solid var(--bg-canvas);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;gap:2px}
-.timerbox .ph{font-family:var(--head);font-size:16px;letter-spacing:.22em;color:var(--accent)}
-.timerbox .ph.locked{color:var(--negative-bright)}
-.timerbox .big{font-family:var(--head);font-size:54px;line-height:1;color:var(--negative-bright)}
-.timerbox .bar{width:85%;height:6px;background:#3a3a3c;margin-top:6px}
+.timerbox{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 14px;gap:2px}
+.timerbox .ph{font-size:13px;font-weight:700;letter-spacing:.3em;color:var(--muted)}
+.timerbox .big{font-family:var(--head);font-size:56px;line-height:1;color:var(--negative-bright)}
+.timerbox .bar{width:85%;height:4px;background:#2e2e30;margin-top:6px}
 .timerbox .bar i{display:block;height:100%;background:var(--negative-bright);transition:width .25s linear}
 
 /* ── Центр: видео - панель - видео ── */
 .mid{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;min-height:0}
 .mid>*{min-width:0}
-.cam{border:2px solid;display:flex;align-items:center;justify-content:center;background:#000;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.22em;text-align:center;padding:10px}
-.cam.c-w1{border-color:var(--w1)} .cam.c-w2{border-color:var(--w2)}
+.cam{border:1px solid #2e2e30;display:flex;align-items:center;justify-content:center;background:#000;color:#55534e;font-size:12px;font-weight:700;letter-spacing:.22em;text-align:center;padding:10px}
+.cam.c-w1{border-top:3px solid var(--w1)} .cam.c-w2{border-top:3px solid var(--w2)}
 
-.panel{background:var(--bg-canvas);color:var(--ink);border-top:6px solid;border-bottom:6px solid;border-image:repeating-linear-gradient(90deg,var(--w1) 0 33%,#fff 33% 50%,var(--w2) 50% 100%) 6;display:flex;flex-direction:column;min-height:0;overflow-y:auto}
-.panel-title{text-align:center;padding:12px 10px 8px;font-family:var(--head);font-size:20px;letter-spacing:.08em;border-bottom:2px solid var(--ink);margin:0 16px 12px}
-.panel-title .phw{color:var(--accent-deep)} .panel-title .phw.locked{color:var(--negative-bright)}
+.panel{background:var(--bg-canvas);color:var(--ink);display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.panel-title{text-align:center;padding:14px 10px 10px;font-family:var(--head);font-size:21px;letter-spacing:.06em}
+.panel-title::after{content:"";display:block;width:56px;height:3px;background:var(--ink);margin:8px auto 0}
 
 .cabinets{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);position:relative;flex:1}
-.cabinets::after{content:"";position:absolute;left:50%;top:4px;bottom:10px;border-left:2px dashed rgba(10,10,11,.22)}
-.cabinet{padding:0 18px 14px;min-width:0}
+.cabinets::after{content:"";position:absolute;left:50%;top:8px;bottom:12px;border-left:1px dashed var(--line)}
+.cabinet{padding:6px 20px 14px;min-width:0}
 
-/* метка кабинета: только цвет угла, без дублирования ника */
-.cab-strip{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.cab-strip i{flex:1;height:7px}
+/* метка кабинета: маленький цветовой якорь, без ника */
+.cab-strip{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cab-strip i{width:22px;height:8px}
 .cab-w1 .cab-strip i{background:var(--w1)} .cab-w2 .cab-strip i{background:var(--w2)}
-.cab-strip span{font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.cab-strip span{font-size:10px;font-weight:700;letter-spacing:.22em;color:var(--ink-soft);text-transform:uppercase;white-space:nowrap}
 @keyframes bump{30%{transform:scale(1.18)}}
 
-/* штамп "ставки закрыты" поверх притушенных контролов */
+/* штамп "ставки закрыты" */
 .lockzone{position:relative}
-.locked .lockzone .ctrls{opacity:.4;pointer-events:none;filter:grayscale(.6)}
+.locked .lockzone .ctrls{opacity:.35;pointer-events:none;filter:grayscale(1)}
 .stamp{display:none;position:absolute;inset:0;align-items:center;justify-content:center;z-index:5;pointer-events:none}
 .locked .stamp{display:flex}
-.stamp span{font-family:var(--head);font-size:19px;letter-spacing:.14em;color:var(--negative-bright);border:3px solid var(--negative-bright);padding:6px 18px;transform:rotate(-7deg);background:rgba(240,234,217,.9)}
+.stamp span{font-family:var(--head);font-size:18px;letter-spacing:.14em;color:var(--negative-bright);border:3px solid var(--negative-bright);padding:6px 18px;transform:rotate(-7deg);background:rgba(240,234,217,.92)}
 
-/* строка управления: ставка + исход */
-.ctrl-row{display:grid;grid-template-columns:96px 1fr;gap:8px;margin-bottom:9px}
-.picker{position:relative}
-.picker-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:9px 10px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em;transition:transform .08s}
-.picker-btn:active{transform:translateY(2px);box-shadow:var(--shadow-press)}
-.picker-btn .caret{font-size:9px;opacity:.55}
-.picker-btn .odds{font-family:var(--mono);font-size:13px;color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
-.picker-btn[data-side="w1"]{background:var(--w1);color:#fff;border-color:var(--w1-deep)}
-.picker-btn[data-side="w2"]{background:var(--w2);color:#fff;border-color:var(--w2-deep)}
-.menu{position:absolute;z-index:30;top:calc(100% + 5px);left:0;min-width:100%;background:#fff;border:2px solid var(--ink);box-shadow:0 6px 0 rgba(0,0,0,.5);display:none;max-height:260px;overflow-y:auto}
+/* строка управления: ставка + исход (тихие белые карточки) */
+.ctrl-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;margin-bottom:9px}
+.picker{position:relative;min-width:0}
+.picker-btn{width:100%;display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid var(--line);padding:7px 10px;text-transform:uppercase;color:var(--ink);min-width:0;text-align:left}
+.picker-btn:hover{border-color:var(--ink)}
+.picker-btn .cap{display:flex;justify-content:space-between;align-items:center;font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
+.picker-btn .caret{font-size:8px}
+.picker-btn .val{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.picker-btn .lab{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.picker-btn .odds{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink-soft);flex:none}
+.menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:100%;background:#fff;border:1px solid var(--ink);box-shadow:0 5px 14px rgba(0,0,0,.25);display:none;max-height:280px;overflow-y:auto}
 .menu.open{display:block}
-.menu button{display:flex;width:100%;justify-content:space-between;gap:14px;padding:8px 10px;font-size:14px;font-weight:700;text-transform:uppercase;border-bottom:1px solid rgba(10,10,11,.12)}
-.menu button:hover{background:var(--bg-canvas-warm)}
+.menu button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:14px;padding:9px 11px;font-size:14px;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--line-soft);color:var(--ink)}
+.menu button:hover{background:var(--bg-canvas)}
 .menu button:disabled{opacity:.35}
-.menu button .odds{font-family:var(--mono);color:var(--trophy);-webkit-text-stroke:.4px var(--ink)}
-.menu button.sel{background:var(--accent)}
-.menu .dot{display:inline-block;width:9px;height:9px;margin-right:5px;border:1px solid var(--ink)}
-.dot{display:inline-block;width:9px;height:9px;border:1px solid var(--ink)}
+.menu button .odds{font-family:var(--mono);color:var(--ink-soft)}
+.menu button.sel{background:var(--bg-canvas-warm);box-shadow:inset 3px 0 0 var(--ink)}
+.dot{display:inline-block;width:10px;height:10px;flex:none}
 .dot.w1{background:var(--w1)} .dot.w2{background:var(--w2)}
+.menu .lab{display:flex;align-items:center;gap:7px}
 
 /* конфиг серии */
-.series-cfg{display:none;align-items:center;gap:8px;background:var(--bg-canvas-warm);border:2px dashed rgba(10,10,11,.35);padding:6px 10px;margin-bottom:9px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.series-cfg{display:none;align-items:center;gap:10px;border:1px dashed var(--line);padding:7px 11px;margin-bottom:9px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
 .series-cfg.show{display:flex;flex-wrap:wrap}
 .series-cfg .len{display:flex;gap:4px}
-.series-cfg .len button{width:30px;height:27px;border:2px solid var(--ink);background:#fff;font-weight:700;font-size:13px}
-.series-cfg .len button.sel{background:var(--ink);color:var(--accent)}
+.series-cfg .len button{width:30px;height:27px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:13px;color:var(--ink)}
+.series-cfg .len button.sel{background:var(--ink);color:var(--bg-canvas);border-color:var(--ink)}
 .series-cfg .len button:disabled{opacity:.3}
-.series-rounds{font-family:var(--mono);color:var(--w1-deep)}
-.cab-w2 .series-rounds{color:var(--w2-deep)}
+.series-rounds{font-family:var(--mono);color:var(--ink)}
 
-/* действия */
-.actions{display:grid;grid-template-columns:1fr 76px;gap:8px;margin-bottom:5px}
-.play{font-family:var(--head);font-size:18px;letter-spacing:.12em;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:var(--shadow-flat);padding:10px;transition:transform .08s}
+/* действия: СТАВКА - единственный громкий элемент панели */
+.actions{display:grid;grid-template-columns:1fr 72px;gap:8px;margin-bottom:6px}
+.play{font-family:var(--head);font-size:19px;letter-spacing:.12em;background:var(--accent);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.45);padding:11px;transition:transform .08s}
 .play:hover:not(:disabled){background:var(--accent-deep)}
-.play:active:not(:disabled){transform:translateY(2px);box-shadow:var(--shadow-press)}
-.play:disabled{background:#cfc8b8;color:#7d776a}
-.auto{font-family:var(--head);font-size:12px;letter-spacing:.08em;border:2px solid var(--ink);box-shadow:var(--shadow-flat);background:#fff;color:var(--ink);padding:5px 3px;line-height:1.2}
+.play:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.play:disabled{background:var(--bg-canvas-warm);color:var(--muted);border-color:var(--line);box-shadow:none}
+.auto{font-family:var(--head);font-size:12px;letter-spacing:.08em;border:1px solid var(--line);background:#fff;color:var(--ink-soft);padding:5px 3px;line-height:1.2}
 .auto .st{display:block;font-family:var(--mono);font-size:9px;color:var(--muted)}
-.auto.on{background:var(--positive);color:#fff} .auto.on .st{color:#bfe8cd}
-.auto:disabled{opacity:.45}
-.limit-note{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:9px}
-.limit-note b{color:var(--ink)}
+.auto.on{background:var(--ink);color:var(--bg-canvas);border-color:var(--ink)} .auto.on .st{color:var(--accent)}
+.auto:disabled{opacity:.4}
+.limit-note{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;white-space:nowrap}
+.limit-note b{color:var(--ink-soft)}
 .flash{color:var(--negative)!important;font-weight:700}
 
 /* активная серия */
-.active-series{display:none;align-items:center;gap:8px;background:var(--ink);color:var(--on-dark);padding:6px 10px;margin-bottom:9px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.active-series{display:none;align-items:center;gap:8px;background:var(--ink);color:var(--on-dark);padding:7px 11px;margin-bottom:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .active-series.show{display:flex;flex-wrap:wrap}
 .active-series .pips{display:flex;gap:3px}
-.active-series .pip{width:12px;height:12px;border:1px solid var(--on-dark);background:transparent}
-.active-series .pip.hit{background:var(--accent)}
+.active-series .pip{width:11px;height:11px;border:1px solid var(--muted)}
+.active-series .pip.hit{background:var(--on-dark);border-color:var(--on-dark)}
 .active-series .wait{color:var(--accent)}
 
-/* мои ставки */
-.mybets h4{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;border-top:2px dashed rgba(10,10,11,.3);padding-top:8px;margin-bottom:5px}
-.mybets ul{list-style:none;max-height:104px;overflow-y:auto}
-.mybets li{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;padding:3px 6px;border-left:4px solid var(--muted);margin-bottom:3px;background:rgba(255,255,255,.55)}
-.mybets li .pay{font-family:var(--mono);white-space:nowrap}
-.mybets li.pending{border-left-color:var(--accent-deep)}
-.mybets li.won{border-left-color:var(--positive);color:var(--positive)}
-.mybets li.lost{border-left-color:var(--negative);color:var(--negative);opacity:.75;text-decoration:line-through}
-.mybets .empty{font-size:11px;color:var(--muted);letter-spacing:.08em;padding:3px 6px}
+/* мои ставки: тихий список с волосяными линиями */
+.mybets h4{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;border-top:1px dashed var(--line);padding-top:9px;margin-bottom:4px}
+.mybets ul{list-style:none;max-height:108px;overflow-y:auto}
+.mybets li{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;padding:5px 2px;border-bottom:1px solid var(--line-soft)}
+.mybets li .lbl{display:flex;align-items:center;gap:6px;color:var(--ink-soft)}
+.mybets li .pay{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+.mybets li.won .pay{color:var(--positive)}
+.mybets li.lost{opacity:.55} .mybets li.lost .pay{color:var(--negative);text-decoration:line-through}
+.mybets .empty{font-size:11px;color:var(--muted);letter-spacing:.08em;padding:4px 2px}
 
 /* ── Подвал ── */
 .foot{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:#000;padding:10px 26px}
 .score{font-family:var(--head);letter-spacing:.08em}
-.score .lbl{font-size:11px;color:var(--muted);letter-spacing:.22em;margin-bottom:2px}
-.score .wl{font-size:26px;color:#fff}
+.score .lbl{font-size:10px;color:var(--muted);letter-spacing:.24em;margin-bottom:2px;font-family:var(--ui);font-weight:700}
+.score .wl{font-size:24px;color:var(--on-dark)}
 .score .w.b{color:var(--w1)} .score .w.r{color:var(--negative-bright)}
 .score.right{text-align:right}
 .fcenter{text-align:center}
-.fcenter .lbl{font-size:11px;color:var(--muted);font-family:var(--head);letter-spacing:.22em;margin-bottom:4px}
+.fcenter .lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.24em;margin-bottom:4px}
 .hist{display:inline-flex;gap:4px;vertical-align:middle;margin-left:8px}
-.hist i{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--head);font-size:11px;color:#fff}
+.hist i{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--head);font-size:10px;color:#fff}
 .hist i.w1{background:var(--w1)} .hist i.w2{background:var(--w2)}
-.kassa{font-family:var(--head);font-size:13px;letter-spacing:.14em;color:var(--muted);margin-top:5px}
-.kassa b{color:var(--accent)}
+.kassa{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--muted);margin-top:4px}
+.kassa b{color:var(--on-dark)}
 
 /* ── Дев-панель ── */
 .devbar{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:10px;color:#6a6a6e}
@@ -180,7 +181,7 @@ button:disabled{cursor:not-allowed}
   <div class="mid">
     <div class="cam c-w1">КАМЕРА ИЛИ МИКРОФОН НЕДОСТУПНЫ</div>
     <div class="panel">
-      <div class="panel-title" id="pTitle">РАУНД №3 · <span class="phw">ПРИЕМ СТАВОК</span></div>
+      <div class="panel-title" id="pTitle">РАУНД №3</div>
       <div class="cabinets" id="cabs"></div>
     </div>
     <div class="cam c-w2">КАМЕРА ИЛИ МИКРОФОН НЕДОСТУПНЫ</div>
@@ -192,7 +193,7 @@ button:disabled{cursor:not-allowed}
       <div class="wl"><span class="w b">W</span><span id="sW1">0</span> • L<span id="sL1">0</span></div></div>
     <div class="fcenter">
       <div class="lbl">ИСТОРИЯ РАУНДОВ <span class="hist" id="hist"></span></div>
-      <div class="kassa">КАССА СЕГОДНЯ / <b>+$75 029</b></div>
+      <div class="kassa">КАССА СЕГОДНЯ / <b>+$75,029</b></div>
     </div>
     <div class="score right"><div class="lbl">КРАСНЫЙ • БОБЕР</div>
       <div class="wl"><span class="w r">W</span><span id="sW2">0</span> • L<span id="sL2">0</span></div></div>
@@ -205,7 +206,7 @@ button:disabled{cursor:not-allowed}
   <button data-t="10">10 сек</button>
   <button data-t="20" class="sel">20 сек</button>
   <button data-t="99999">∞</button>
-  <span class="vtag">bet-cabinet v0.3.1 · симуляция исходов 50/50 · фикстура ?state=series</span>
+  <span class="vtag">bet-cabinet v0.4 · симуляция исходов 50/50 · фикстуры ?state=series, ?phase=locked</span>
 </div>
 
 <script>
@@ -238,7 +239,7 @@ const oddsFor = (sel,len) => sel.type==='round' ? ROUND_ODDS : SERIES_ODDS[len];
 function cabinetHTML(who){
   const s = SIDES[who];
   return `<div class="cabinet cab-${who}" data-who="${who}">
-    <div class="cab-strip"><i></i><span>СТАВКИ · ${s.label} УГОЛ</span><i></i></div>
+    <div class="cab-strip"><i></i><span>СТАВКИ · ${s.label} УГОЛ</span></div>
     <div class="lockzone">
       <div class="ctrls">
         <div class="ctrl-row">
@@ -252,7 +253,7 @@ function cabinetHTML(who){
           </div>
         </div>
         <div class="series-cfg" id="seriesCfg-${who}">
-          <span>СЕРИЯ ПОДРЯД:</span>
+          <span>ДЛИНА СЕРИИ:</span>
           <span class="len" id="lenSeg-${who}"></span>
           <span>РАУНДЫ <span class="series-rounds" id="seriesRounds-${who}"></span></span>
         </div>
@@ -277,34 +278,34 @@ function renderCab(who){
 
   // баланс (в шапке бойца) и лимит
   $('#topbal-'+who).innerHTML = `<small>БАЛАНС</small>${fmt$(p.balance)}`;
-  $('#limit-'+who).innerHTML = `ЛИМИТ СТАВКИ 10% ОТ БАЛАНСА · МАКС <b>${fmt$(mx)}</b>`;
+  $('#limit-'+who).innerHTML = `ЛИМИТ 10% ОТ БАЛАНСА · МАКС <b>${fmt$(mx)}</b>`;
   document.querySelector('.cab-'+who).classList.toggle('locked', !betting);
 
   // ставка
   if (p.stake > mx) p.stake = STAKES.filter(s=>s<=mx).pop() || 0;
-  $('#stakeBtn-'+who).innerHTML = `<span>${fmt$(p.stake)}</span><span class="caret">▼</span>`;
+  $('#stakeBtn-'+who).innerHTML =
+    `<span class="cap">СУММА<span class="caret">▼</span></span><span class="val">${fmt$(p.stake)}</span>`;
   $('#stakeMenu-'+who).innerHTML = STAKES.map(s=>
     `<button data-stake="${s}" ${s>mx?'disabled':''} class="${s===p.stake?'sel':''}">
       <span>${fmt$(s)}</span>${s>mx?'<span style="font-size:9px">>10%</span>':''}</button>`).join('');
 
   // исход
   const sel = p.sel, odds = oddsFor(sel, p.seriesLen);
-  const sideTxt = side => `<span class="dot ${side}"></span>${side==='w1'?'ПОБЕДА СИНИЙ':'ПОБЕДА КРАСНЫЙ'}`;
-  const serTxt  = side => `<span class="dot ${side}"></span>${side==='w1'?'СЕРИЯ СИНИЙ':'СЕРИЯ КРАСНЫЙ'}`;
-  $('#outBtn-'+who).dataset.side = sel.side;
+  const labTxt = (t,side) => `<span class="dot ${side}"></span>${t==='round'
+      ? (side==='w1'?'ПОБЕДА СИНИЙ':'ПОБЕДА КРАСНЫЙ')
+      : (side==='w1'?'СЕРИЯ СИНИЙ':'СЕРИЯ КРАСНЫЙ')}`;
   $('#outBtn-'+who).innerHTML =
-    `<span>${sel.type==='round' ? (sel.side==='w1'?'ПОБЕДА СИНИЙ':'ПОБЕДА КРАСНЫЙ')
-                                : (sel.side==='w1'?'СЕРИЯ СИНИЙ':'СЕРИЯ КРАСНЫЙ')}</span>
-     <span><span class="odds">×${odds.toFixed(2)}</span> <span class="caret">▼</span></span>`;
+    `<span class="cap">${sel.type==='round'?'ИСХОД РАУНДА':'СЕРИЯ ПОБЕД'}<span class="caret">▼</span></span>
+     <span class="val"><span class="lab"><span class="dot ${sel.side}"></span>${sel.side==='w1'?'СИНИЙ':'КРАСНЫЙ'}</span><span class="odds">×${odds.toFixed(2)}</span></span>`;
   const hasSeries = p.bets.some(b=>b.type==='series' && b.status==='pending');
   $('#outMenu-'+who).innerHTML = [
-    {t:'round',s:'w1',h:sideTxt('w1'),o:ROUND_ODDS},
-    {t:'round',s:'w2',h:sideTxt('w2'),o:ROUND_ODDS},
-    {t:'series',s:'w1',h:serTxt('w1'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
-    {t:'series',s:'w2',h:serTxt('w2'),o:SERIES_ODDS[p.seriesLen],d:hasSeries},
+    {t:'round',s:'w1',o:ROUND_ODDS},
+    {t:'round',s:'w2',o:ROUND_ODDS},
+    {t:'series',s:'w1',o:SERIES_ODDS[p.seriesLen],d:hasSeries},
+    {t:'series',s:'w2',o:SERIES_ODDS[p.seriesLen],d:hasSeries},
   ].map(m=>`<button data-out="${m.t}:${m.s}" ${m.d?'disabled':''}
       class="${sel.type===m.t&&sel.side===m.s?'sel':''}">
-      <span>${m.h}</span><span class="odds">×${m.o.toFixed(2)}</span></button>`).join('')
+      <span class="lab">${labTxt(m.t,m.s)}</span><span class="odds">×${m.o.toFixed(2)}</span></button>`).join('')
     + (hasSeries ? '<button disabled><span style="font-size:10px;text-transform:none">серия уже активна - одна за раз</span></button>' : '');
 
   // конфиг серии: старт всегда = текущий раунд, видна только длина
@@ -351,8 +352,8 @@ function renderCab(who){
   const ul = $('#bets-'+who);
   ul.innerHTML = p.bets.length ? p.bets.slice(-8).reverse().map(b=>{
     const lbl = b.type==='round'
-      ? `<span class="dot ${b.side}"></span> Р${b.round} · ${b.side==='w1'?'СИН':'КРС'}`
-      : `<span class="dot ${b.side}"></span> СЕРИЯ ${b.from}-${b.to} · ${b.side==='w1'?'СИН':'КРС'}${b.status==='pending'?` · ${b.wins}/${b.to-b.from+1}`:''}`;
+      ? `<span class="dot ${b.side}"></span>Р${b.round} · ${b.side==='w1'?'СИН':'КРС'}`
+      : `<span class="dot ${b.side}"></span>СЕРИЯ ${b.from}-${b.to} · ${b.side==='w1'?'СИН':'КРС'}${b.status==='pending'?` · ${b.wins}/${b.to-b.from+1}`:''}`;
     const pay = b.status==='won' ? '+'+fmt$(b.payout)
               : b.status==='lost' ? '-'+fmt$(b.stake)
               : `${fmt$(b.stake)} ×${b.odds.toFixed(2)} → ${fmt$(Math.round(b.stake*b.odds))}`;
@@ -363,7 +364,6 @@ function renderCab(who){
 function renderTop(){
   const ph = $('#hPh');
   ph.textContent = {BETTING:'ПРИЕМ СТАВОК', SELECT:'ВЫБОР КАРТЫ', RESULT:'РЕЗУЛЬТАТ'}[G.phase];
-  ph.classList.toggle('locked', G.phase!=='BETTING');
   $('#hBig').textContent = Math.max(0, Math.ceil(G.tLeft));
   $('#hProg').style.width = (100*G.tLeft/G.tTotal) + '%';
   $('#pTitle').textContent = `РАУНД №${G.round}`;
