@@ -10,6 +10,7 @@ function check(cond: boolean, msg: string) {
 }
 
 const SEEDS = 100, ROUNDS = 54;
+let roundish = 0, totalW = 0;
 
 for (let s = 0; s < SEEDS; s++) {
   const sim = createSimulation({ sessionId: 'qa-' + s, date: '2026-06-11', seed: 1000 + s });
@@ -21,7 +22,7 @@ for (let s = 0; s < SEEDS; s++) {
     const voided = r === 17 && s % 10 === 0;     // иногда проверяем void
     const out = sim.generateRound({ round: r, winner: histRng(r), voided });
     const { activity, winners, kassaToday } = out;
-    kassaCheck += activity.bank;
+    kassaCheck = Math.round((kassaCheck + activity.bank) * 100) / 100;
 
     check(activity.betCount >= 3, `seed ${s} r${r}: betCount < 3`);
     check(kassaToday === kassaCheck, `seed ${s} r${r}: касса != сумме банков (${kassaToday} vs ${kassaCheck})`);
@@ -33,9 +34,12 @@ for (let s = 0; s < SEEDS; s++) {
     // длинные (СЕРИЯ/ТОТАЛ/ЭКСПРЕСС) - ставки прошлых раундов, банк не ограничивает
     const shortSum = winners.filter(w => w.marketTag === 'РАУНД' || w.marketTag === 'ФОРА')
       .reduce((a, w) => a + w.payout, 0);
-    check(shortSum <= activity.bank, `seed ${s} r${r}: короткие выплаты ${shortSum} > банка ${activity.bank}`);
+    check(shortSum <= activity.bank + 0.1, `seed ${s} r${r}: короткие выплаты ${shortSum} > банка ${activity.bank}`);
     const mx = Math.max(...winners.map(w => w.payout));
-    check(mx <= 1.3 * 450 + 120, `seed ${s} r${r}: выплата ${mx} выше потолка аудитории`);
+    check(mx <= 600, `seed ${s} r${r}: выплата ${mx} выше потолка аудитории`);
+    // конвертация RUB->USD: суммы не должны быть массово круглыми
+    roundish += winners.filter(w => Number.isInteger(w.payout)).length;
+    totalW += winners.length;
 
     // ники: маска максимум 2 раза за раунд и не подряд
     const cnt = new Map<string, number>();
@@ -54,6 +58,8 @@ for (let s = 0; s < SEEDS; s++) {
   const tail = prevBetCounts.slice(-10).reduce((a, b) => a + b, 0) / 10;
   check(tail > head, `seed ${s}: объем не растет к концу (${head.toFixed(0)} -> ${tail.toFixed(0)})`);
 }
+
+check(roundish / totalW < 0.1, `слишком много круглых выплат: ${(100 * roundish / totalW).toFixed(1)}%`);
 
 // детерминизм: одинаковый конфиг = идентичный поток
 {

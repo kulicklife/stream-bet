@@ -129,12 +129,11 @@ function zipfPick(rng: () => number, pool: string[], regulars: number): string {
 
 /* ─────────────────────────── номиналы/валюта ─────────────────────────── */
 
-/* Калибровка на аудиторию RU-стримеров (~200к подписчиков, небогатый регион):
-   подавляющее большинство ставок $1-3, "разогретые" $10-20 - уже тяжелый порог,
-   кит этой аудитории - $50-200, а не $5000. */
-const STAKES_USD = [1, 2, 3, 5, 10, 15, 20] as const;
-const STAKES_RUB = [50, 100, 200, 300, 500, 1000, 1500] as const;
-const WHALE_USD = [50, 100, 200] as const;
+/* Калибровка на аудиторию RU-стримеров (~200к подписчиков, небогатый регион).
+   Люди ставят В РУБЛЯХ круглыми номиналами; если валюта витрины USD - суммы
+   конвертируются по дневному курсу и становятся дробными ($1.09, $13.62).
+   Кит этой аудитории - 5-20к руб ($55-220), а не $5000. */
+const STAKES_RUB = [50, 100, 100, 200, 300, 500, 1000, 1500] as const;
 const WHALE_RUB = [5000, 10000, 20000] as const;
 
 function snapStake(rng: () => number, raw: number, nominals: readonly number[]): number {
@@ -159,19 +158,22 @@ export function createSimulation(cfg: SimConfig) {
   const totalRounds = cfg.totalRounds ?? 54;
   const peak = cfg.peakBetsPerRound ?? 35;   // на пике эфира ~20-45 ставок за раунд
   const currency: Currency = cfg.currency ?? 'USD';
-  const stakes = currency === 'USD' ? STAKES_USD : STAKES_RUB;
-  const whaleStakes = currency === 'USD' ? WHALE_USD : WHALE_RUB;
-  const medianStake = currency === 'USD' ? 1.3 : 110;
+  const medianRub = 110;   // медианная ставка аудитории в рублях
 
   const rng = mulberry32(cfg.seed ?? hashStr(cfg.sessionId + ':' + cfg.date));
   const { pool, whales } = buildNickPool(cfg.date, 400);
+
+  /* Дневной курс RUB->USD (фиксирован на дату). Для RUB-витрины fx=1. */
+  const fx = currency === 'USD' ? 88 + mulberry32(hashStr('fx:' + cfg.date))() * 6 : 1;
+  /** Деньги наружу: рубли -> валюта витрины, округление до центов/копеек. */
+  const money = (rub: number) => Math.round((rub / fx) * 100) / 100;
 
   // Состояние сессии
   let kassa = 0;
   let history: Side[] = [];
   let lastRoundHadBigWin = false;
   let lastWhaleNick = '';
-  let sessionMaxPayout = 0;
+  let sessionMaxRub = 0;
 
   /* Кривая аудитории: рост 0.35 -> 1.0 + бампы длинных окон + спад в конце. */
   function audience(r: number): number {
@@ -181,15 +183,9 @@ export function createSimulation(cfg: SimConfig) {
     return a;
   }
 
+  /** Ставка в рублях, круглым человеческим номиналом. */
   function sampleStake(): number {
-    return snapStake(rng, logNormal(rng, medianStake, 1.1), stakes);
-  }
-
-  /** Некруглая выплата: круглые суммы подряд - палево. */
-  function unround(x: number): number {
-    const v = Math.round(x);
-    if (v >= 100 && v % 100 === 0) return v + 3 + Math.floor(rng() * 89);
-    return Math.max(1, v);
+    return snapStake(rng, logNormal(rng, medianRub, 1.1), STAKES_RUB);
   }
 
   function odds(m: Market): number { return m.oddsLo + rng() * (m.oddsHi - m.oddsLo); }
@@ -218,7 +214,7 @@ export function createSimulation(cfg: SimConfig) {
       const m = rng() < 0.6 ? M_ROUND : rng() < 0.5 ? M_TOTAL : M_FORA;
       const mask = pickNick(used, last, false);
       last = mask;
-      out.push({ round: 0, nickMasked: mask, payout: unround(Math.max(sampleStake() * odds(m), medianStake * (1.2 + rng() * 1.6))), marketTag: m.tag, delayMs: i * 1200 });
+      out.push({ round: 0, nickMasked: mask, payout: money(Math.max(sampleStake() * odds(m), medianRub * (1.2 + rng() * 1.6))), marketTag: m.tag, delayMs: i * 1200 });
     }
     return out;
   }
@@ -231,15 +227,16 @@ export function createSimulation(cfg: SimConfig) {
     const damp = lastRoundHadBigWin ? 0.85 : 1;                  // пул "выдохся" после крупняка
     const betCount = Math.max(3, Math.round(audience(ctx.round) * peak * noise * damp));
 
-    /* ── банк = сумма реально насэмпленных ставок ── */
+    /* ── банк = сумма реально насэмпленных ставок (внутри все в рублях) ── */
     const stakesArr: number[] = [];
     for (let i = 0; i < betCount; i++) stakesArr.push(sampleStake());
     const whaleP = 0.02 + 0.10 * (ctx.round / totalRounds);     // киты: редко, чаще к концу
     let whaleCount = rng() < whaleP ? poisson(rng, 1.2) : 0;     // иногда 0, иногда 5
-    for (let i = 0; i < whaleCount; i++) stakesArr.push(pick(rng, whaleStakes));
-    let bank = Math.round(stakesArr.reduce((a, b) => a + b, 0) / 10) * 10;
+    for (let i = 0; i < whaleCount; i++) stakesArr.push(pick(rng, WHALE_RUB));
+    const bankRub = stakesArr.reduce((a, b) => a + b, 0);
+    const bank = money(bankRub);                                 // наружу - в валюте витрины
 
-    kassa += bank;
+    kassa = Math.round((kassa + bank) * 100) / 100;
     const activity: RoundActivity = { round: ctx.round, betCount: betCount + whaleCount, bank };
     if (ctx.voided) { lastRoundHadBigWin = false; return { activity, winners: [], kassaToday: kassa }; }
 
@@ -248,8 +245,8 @@ export function createSimulation(cfg: SimConfig) {
     const streakBroken = h.length >= 4 && h[h.length - 1] !== h[h.length - 2]
       && h[h.length - 2] === h[h.length - 3] && h[h.length - 3] === h[h.length - 4];
 
-    /* ── бюджет выплат: всегда меньше банка ── */
-    const budget = bank * (streakBroken ? 0.65 + rng() * 0.27 : 0.55 + rng() * 0.37);
+    /* ── бюджет выплат (в рублях): всегда меньше банка ── */
+    const budget = bankRub * (streakBroken ? 0.65 + rng() * 0.27 : 0.55 + rng() * 0.37);
 
     /* ── сколько победителей показываем ── */
     let winCount = clamp(Math.round(2 + betCount / 8), 2, 8);
@@ -266,28 +263,28 @@ export function createSimulation(cfg: SimConfig) {
     const rawSum = raw.reduce((a, b) => a + b.val, 0) || 1;
     raw = raw.map(w => ({ ...w, val: (w.val / rawSum) * budget }));
     /* пол выплаты с джиттером: одинаковые минимумы сами становятся паттерном */
-    raw = raw.map(w => ({ ...w, val: Math.max(w.val, medianStake * (1.2 + rng() * 1.6)) }));
+    raw = raw.map(w => ({ ...w, val: Math.max(w.val, medianRub * (1.2 + rng() * 1.6)) }));
     const flooredSum = raw.reduce((a, b) => a + b.val, 0);
-    if (flooredSum > bank * 0.95) raw = raw.map(w => ({ ...w, val: w.val * (bank * 0.95) / flooredSum }));
+    if (flooredSum > bankRub * 0.95) raw = raw.map(w => ({ ...w, val: w.val * (bankRub * 0.95) / flooredSum }));
 
     /* длинные (СЕРИЯ/ТОТАЛ/ЭКСПРЕСС): ставки сделаны в ПРОШЛЫХ раундах,
        поэтому выплата не обязана помещаться в банк текущего раунда.
        Потолок правдоподобия: аудитория ставит $1-5 на длинные кэфы. */
-    const ceiling = medianStake * 450;                            // ~$580 / ~50к ₽
+    const ceiling = medianRub * 450;                              // ~50к руб (~$540)
     const longs: Market[] = [];
     if (rng() < 0.25 + seriesBoost) longs.push(M_SERIES(2 + Math.floor(rng() * 4)));
     const bigWins = isHalfEnd ? 1 + Math.floor(rng() * 3) : (rng() < 0.06 ? 1 : 0);
     for (let i = 0; i < bigWins; i++)
       longs.push(rng() < 0.5 ? M_EXPRESS : (rng() < 0.5 ? M_TOTAL : M_SERIES(4 + Math.floor(rng() * 2))));
     const longRaw = longs.map(m => {
-      const stake = Math.max(1, Math.round(medianStake * (1 + rng() * 5)));
-      return { m, val: clamp(stake * odds(m), medianStake * 8, ceiling) };
+      const stake = snapStake(rng, medianRub * (1 + rng() * 5), STAKES_RUB);
+      return { m, val: clamp(stake * odds(m), medianRub * 8, ceiling) };
     });
 
     /* хедлайнер последнего раунда: крупнейший залет сессии (в пределах потолка) */
     if (ctx.round === totalRounds && longRaw.length) {
       const top = longRaw.reduce((a, b) => (a.val > b.val ? a : b));
-      top.val = clamp(Math.max(top.val, sessionMaxPayout * 1.15), medianStake * 8, ceiling);
+      top.val = clamp(Math.max(top.val, sessionMaxRub * 1.15), medianRub * 8, ceiling);
     }
     raw = raw.concat(longRaw);
 
@@ -297,19 +294,19 @@ export function createSimulation(cfg: SimConfig) {
     let lastMask = '';
     let delay = 400 + Math.floor(rng() * 800);
     const winners: WinnerEvent[] = raw.map(w => {
-      const isWhaleWin = w.val > medianStake * 60;
+      const isWhaleWin = w.val > medianRub * 60;
       const mask = pickNick(used, lastMask, isWhaleWin);
       lastMask = mask;
       const ev: WinnerEvent = {
-        round: ctx.round, nickMasked: mask, payout: unround(w.val),
+        round: ctx.round, nickMasked: mask, payout: money(w.val),
         marketTag: w.m.tag, delayMs: delay,
       };
       delay += 500 + Math.floor(rng() * 3500);
       return ev;
     });
 
-    sessionMaxPayout = Math.max(sessionMaxPayout, ...winners.map(w => w.payout), 0);
-    lastRoundHadBigWin = winners.some(w => w.payout > medianStake * 60);
+    sessionMaxRub = Math.max(sessionMaxRub, ...raw.map(w => w.val), 0);
+    lastRoundHadBigWin = raw.some(w => w.val > medianRub * 60);
 
     return { activity, winners, kassaToday: kassa };
   }

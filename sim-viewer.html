@@ -51,7 +51,7 @@ h1{font-family:var(--head);color:var(--canvas);font-size:24px;letter-spacing:.06
 <script src="sim/winners-feed-generator.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const fmt = (n,c) => (c==='USD'?'$':'') + n.toLocaleString('en-US') + (c==='RUB'?' ₽':'');
+const fmt = (n,c) => (c==='USD'?'$':'') + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + (c==='RUB'?' ₽':'');
 
 function run(){
   const seed = +$('#seed').value || 1;
